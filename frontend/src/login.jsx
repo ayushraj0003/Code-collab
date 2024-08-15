@@ -25,6 +25,8 @@ function Login(){
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', formData);
       console.log('Signup successful: ', response.data);
+      const token = response.data.token;
+      localStorage.setItem('token', token);
       window.location.href='http://localhost:3000/dashboard';
       // Handle success (e.g., redirect to login page or show success message)
     } catch (error) {
