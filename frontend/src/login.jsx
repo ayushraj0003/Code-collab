@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import axios from "axios";
 import { Link } from "react-router-dom";
 function Login() {
   const [formData, setFormData] = useState({
@@ -18,10 +18,18 @@ function Login() {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("Form Data Submitted: ", formData);
-   
+    
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+      console.log(response);
+      
+      // Handle success (e.g., store token, redirect to dashboard)
+    } catch (error) {
+      // console.error('There was an error logging in: ', error.response.data);
+      // Handle error (e.g., show error message)
+    }
   };
 
   return (

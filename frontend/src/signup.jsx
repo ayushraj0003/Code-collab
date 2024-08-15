@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-
+import axios from "axios";
 function Signup(){
   const [formData, setFormData] = useState({
 
@@ -18,12 +18,19 @@ function Signup(){
     });
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log("Form Data Submitted: ", formData);
-   
-  };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      console.log('Signup successful: ', response.data);
+      // Handle success (e.g., redirect to login page or show success message)
+    } catch (error) {
+      console.error('There was an error signing up: ', error.response.data);
+      // Handle error (e.g., show error message)
+    }
+  };
   return (
     <div>
       <div className="left">
