@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
-function Login() {
+
+import axios from "axios";
+function Login(){
   const [formData, setFormData] = useState({
-    name: '',
+
     email: '',
     password: '',
-    mobile: '',
 
   });
 
@@ -18,37 +18,29 @@ function Login() {
     });
   };
 
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
-      console.log(response);
-      
-      // Handle success (e.g., store token, redirect to dashboard)
+      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+      console.log('Signup successful: ', response.data);
+      window.location.href='http://localhost:3000/dashboard';
+      // Handle success (e.g., redirect to login page or show success message)
     } catch (error) {
-      // console.error('There was an error logging in: ', error.response.data);
+      console.error('There was an error signing up: ', error.response.data);
       // Handle error (e.g., show error message)
     }
   };
-
   return (
     <div>
       <div className="left">
         <div className="head">
-          <h1>LOGIN FORM</h1>
+          <h1>SIGNUP</h1>
           <h4>Enter the details below</h4>
         </div>
         <form onSubmit={handleSubmit}>
-          <div className="name">
-            <input
-              type="text"
-              placeholder="Enter name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-            />
-          </div>
+
           <div className="email">
             <input
               type="email"
@@ -67,18 +59,10 @@ function Login() {
               onChange={handleChange}
             />
           </div>
-          <div className="number">
-            <input
-              type="text"
-              placeholder="Enter Number"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
-            />
-          </div>
+
    
           <button type="submit">Submit</button>
-          <Link to="/signup"><a>Already a user</a></Link>
+          <Link to="/"><a>Create a new account</a></Link>
         </form>
       </div>
       <div className="right">
@@ -88,4 +72,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Login

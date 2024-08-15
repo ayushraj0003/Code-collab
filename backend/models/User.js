@@ -10,10 +10,9 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        lowercase: true, // Automatically convert email to lowercase
+        lowercase: true, 
         validate: {
             validator: function(value) {
-                // Basic email format validation
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
             },
             message: "Please enter a valid email address."
@@ -21,13 +20,13 @@ const UserSchema = new mongoose.Schema({
     },
     mobile: {
         type: String,
-        // required: true
-        // validate: {
-        //     validator: function(value) {
-        //         return /^[0-9]{10}$/.test(value);  // Assuming a 10-digit phone number
-        //     },
-        //     message: "Please enter a valid 10-digit mobile number."
-        // }
+        required: true,
+        validate: {
+            validator: function(value) {
+                return /^[0-9]{10}$/.test(value);  
+            },
+            message: "Please enter a valid 10-digit mobile number."
+        }
     },
     password: {
         type: String,
@@ -35,7 +34,6 @@ const UserSchema = new mongoose.Schema({
         minlength: 8,
         validate: {
             validator: function(value) {
-                // Regex: At least one digit, one special character, and at least 8 characters long
                 return /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/.test(value);
             },
             message: "Password must be at least 8 characters long and contain at least one numerical digit and one special character."
