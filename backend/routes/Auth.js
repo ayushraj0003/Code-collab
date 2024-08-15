@@ -23,7 +23,7 @@ router.post('/register', async (req, res) => {
         //     });
         // }
 
-        user = new User({ name,email, password, mobile });
+        user = new User({ name,email, password, mobile});
         await user.save();
 
         const payload = { userId: user.id };

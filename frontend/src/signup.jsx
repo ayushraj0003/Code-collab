@@ -23,7 +23,7 @@ function Signup(){
     event.preventDefault();
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
       console.log('Signup successful: ', response.data);
       // Handle success (e.g., redirect to login page or show success message)
     } catch (error) {
@@ -61,7 +61,7 @@ function Signup(){
 
    
           <button type="submit">Submit</button>
-          <Link to="/"><a>Already a user</a></Link>
+          <Link to="/"><a>Create a new account</a></Link>
         </form>
       </div>
       <div className="right">

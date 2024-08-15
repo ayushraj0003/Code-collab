@@ -21,13 +21,13 @@ const UserSchema = new mongoose.Schema({
     },
     mobile: {
         type: String,
-        required: true,
-        validate: {
-            validator: function(value) {
-                return /^[0-9]{10}$/.test(value);  // Assuming a 10-digit phone number
-            },
-            message: "Please enter a valid 10-digit mobile number."
-        }
+        // required: true
+        // validate: {
+        //     validator: function(value) {
+        //         return /^[0-9]{10}$/.test(value);  // Assuming a 10-digit phone number
+        //     },
+        //     message: "Please enter a valid 10-digit mobile number."
+        // }
     },
     password: {
         type: String,

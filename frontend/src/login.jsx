@@ -6,7 +6,7 @@ function Login() {
     name: '',
     email: '',
     password: '',
-    number: '',
+    mobile: '',
 
   });
 
@@ -22,7 +22,7 @@ function Login() {
     event.preventDefault();
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
       console.log(response);
       
       // Handle success (e.g., store token, redirect to dashboard)
@@ -71,8 +71,8 @@ function Login() {
             <input
               type="text"
               placeholder="Enter Number"
-              name="number"
-              value={formData.number}
+              name="mobile"
+              value={formData.mobile}
               onChange={handleChange}
             />
           </div>
