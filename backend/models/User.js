@@ -38,7 +38,7 @@ const UserSchema = new mongoose.Schema({
             },
             message: "Password must be at least 8 characters long and contain at least one numerical digit and one special character."
         }
-    },
+    }
 });
 
 // Hash password before saving

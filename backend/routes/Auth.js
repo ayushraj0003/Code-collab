@@ -96,6 +96,8 @@ router.get('/details', verifyToken, async (req, res) => {
     }
   });
 
+  
+
 
 
 module.exports = router;

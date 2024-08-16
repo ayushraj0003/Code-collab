@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+
 function Signup() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     mobile: '',
-
   });
 
   const handleChange = (event) => {
@@ -26,68 +26,60 @@ function Signup() {
       console.log(response);
       const token = response.data.token;
       localStorage.setItem('token', token);
-      window.location.href='http://localhost:3000/dashboard';
-
-      
-      // Handle success (e.g., store token, redirect to dashboard)
+      window.location.href = 'http://localhost:3000/dashboard';
     } catch (error) {
-      // console.error('There was an error logging in: ', error.response.data);
-      // Handle error (e.g., show error message)
+      console.error('There was an error registering: ', error.response.data);
     }
   };
 
   return (
-    <div>
-      <div className="left">
-        <div className="head">
-          <h1>LOGIN FORM</h1>
-          <h4>Enter the details below</h4>
-        </div>
+    <div className="container" id="container">
+      <div className="form-container sign-up-container">
         <form onSubmit={handleSubmit}>
-          <div className="name">
-            <input
-              type="text"
-              placeholder="Enter name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-            />
+          <h1>Create Account</h1>
+          <div className="social-container">
+            <a href="#" className="social"><i className="fab fa-facebook-f"></i></a>
+            <a href="#" className="social"><i className="fab fa-google-plus-g"></i></a>
+            <a href="#" className="social"><i className="fab fa-linkedin-in"></i></a>
           </div>
-          <div className="email">
-            <input
-              type="email"
-              placeholder="Enter Email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="pass">
-            <input
-              type="password"
-              placeholder="Enter Password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="number">
-            <input
-              type="text"
-              placeholder="Enter Number"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
-            />
-          </div>
-   
-          <button type="submit">Submit</button>
-          <Link to="/signup"><a>Already a user</a></Link>
+          <span>or use your email for registration</span>
+          <input
+            type="text"
+            placeholder="Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            placeholder="Mobile Number"
+            name="mobile"
+            value={formData.mobile}
+            onChange={handleChange}
+          />
+          <button type="submit">Sign Up</button>
         </form>
       </div>
-      <div className="right">
-     
-      </div>
+
+ 
+            <Link to="/signup">
+              <button className="ghost">Sign Up</button>
+            </Link>
+
     </div>
   );
 }
