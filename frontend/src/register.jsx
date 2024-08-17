@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import './styles.css';
+
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -37,12 +39,6 @@ function Signup() {
       <div className="form-container sign-up-container">
         <form onSubmit={handleSubmit}>
           <h1>Create Account</h1>
-          <div className="social-container">
-            <a href="#" className="social"><i className="fab fa-facebook-f"></i></a>
-            <a href="#" className="social"><i className="fab fa-google-plus-g"></i></a>
-            <a href="#" className="social"><i className="fab fa-linkedin-in"></i></a>
-          </div>
-          <span>or use your email for registration</span>
           <input
             type="text"
             placeholder="Name"
@@ -75,10 +71,13 @@ function Signup() {
         </form>
       </div>
 
- 
+          <div>
+            <p>Already a user :</p>
             <Link to="/signup">
-              <button className="ghost">Sign Up</button>
-            </Link>
+                <button >Log in</button>
+              </Link>
+          </div>
+            
 
     </div>
   );

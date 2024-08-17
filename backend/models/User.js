@@ -21,23 +21,23 @@ const UserSchema = new mongoose.Schema({
     mobile: {
         type: String,
         required: true,
-        validate: {
-            validator: function(value) {
-                return /^[0-9]{10}$/.test(value);  
-            },
-            message: "Please enter a valid 10-digit mobile number."
-        }
+        // validate: {
+        //     validator: function(value) {
+        //         return /^[0-9]{10}$/.test(value);  
+        //     },
+        //     message: "Please enter a valid 10-digit mobile number."
+        // }
     },
     password: {
         type: String,
         required: true,
-        minlength: 8,
-        validate: {
-            validator: function(value) {
-                return /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/.test(value);
-            },
-            message: "Password must be at least 8 characters long and contain at least one numerical digit and one special character."
-        }
+        // minlength: 8,
+        // validate: {
+        //     validator: function(value) {
+        //         return /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/.test(value);
+        //     },
+        //     message: "Password must be at least 8 characters long and contain at least one numerical digit and one special character."
+        // }
     }
 });
 

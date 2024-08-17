@@ -1,0 +1,224 @@
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    background: #ffffff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px 20px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  /* Form Styling */
+  .form-container {
+    padding: 0 50px;
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  input {
+    background-color: #f0f0f0;
+    border: none;
+    padding: 15px;
+    margin: 8px 0;
+    width: 100%;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  button {
+    border-radius: 20px;
+    border: 1px solid #4CAF50;
+    background-color: #4CAF50;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 45px;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Social Media Links */
+  .social-container {
+    margin: 20px 0;
+  }
+  
+  .social-container a {
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    margin: 0 5px;
+    text-align: center;
+    line-height: 40px;
+    color: #333;
+    transition: all 0.3s ease;
+  }
+  
+  .social-container a:hover {
+    border-color: #4CAF50;
+    color: #4CAF50;
+  }
+  
+  /* Overlay Styles */
+  .overlay-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin-top: 40px;
+  }
+  
+  .overlay {
+    background: #4CAF50;
+    color: white;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.6s ease-in-out;
+  }
+  
+  .overlay-panel {
+    padding: 0 40px;
+  }
+  
+  .overlay-panel.overlay-left {
+    transform: translateX(0%);
+  }
+  
+  .overlay-container:hover .overlay {
+    transform: translateX(0%);
+  }
+  
+  a {
+    color: #4CAF50;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+  
+    .form-container {
+      padding: 0 20px;
+    }
+  
+    input {
+      font-size: 14px;
+    }
+  
+    button {
+      font-size: 14px;
+      padding: 10px 30px;
+    }
+  }
+
+  .room-card{
+    border: 1px solid black;
+    border-radius: 5px;
+    width: 200px;
+    padding: 5px;
+    margin: 5px;
+  }
+  
+  .rooms-list{
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    flex-wrap: wrap;
+    width: 800px;
+    
+  }
+
+
+  /* Dashboard Styles */
+.dashboard-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .dashboard-container h1 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .dashboard-container p {
+    font-size: 18px;
+    color: #555;
+    margin: 10px 0;
+  }
+  
+  .dashboard-container p.error {
+    color: #ff4d4d;
+  }
+  
+  .dashboard-welcome {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  
+  .dashboard-email {
+    color: #777;
+    font-style: italic;
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 768px) {
+    .dashboard-container {
+      padding: 15px;
+    }
+  
+    .dashboard-container h1 {
+      font-size: 28px;
+    }
+  
+    .dashboard-container p {
+      font-size: 16px;
+    }
+  }
+  

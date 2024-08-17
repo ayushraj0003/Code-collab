@@ -62,6 +62,7 @@ router.post('/create', verifyToken, async (req, res) => {
         roomId,
         userId: req.user.userId, // Extracted from the token
         roomName,
+        users:req.user.userId
       });
 
       // Save the room to the database
@@ -103,6 +104,39 @@ router.post('/join', verifyToken, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+router.get('/my-rooms', verifyToken, async (req, res) => {
+  try {
+      // Fetch all rooms where the user is the owner or a member
+      const rooms = await Room.find({
+          $or: [{ userId: req.user.userId }, { users: req.user.userId }]
+      });
+
+      res.status(200).json(rooms);
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Example in Express.js
+router.get('/:roomId/users', verifyToken, async (req, res) => {
+  try {
+    const room = await Room.findOne({ roomId: req.params.roomId })
+      .populate('userId')  
+      .populate('users'); 
+    
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    res.status(200).json(room); // Send the room with populated userId and users
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 
   
