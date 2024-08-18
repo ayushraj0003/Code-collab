@@ -137,7 +137,44 @@ router.get('/:roomId/users', verifyToken, async (req, res) => {
   }
 });
 
+router.post('/:roomId/save-code', verifyToken, async (req, res) => {
+  try {
+    const { code } = req.body;
+    const room = await Room.findOne({ roomId: req.params.roomId });
+    
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
 
+    // Save the current version of the code
+    room.codeHistory.push({ code, date: new Date() });
+    await room.save();
 
+    res.status(200).json({ message: 'Code saved successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:roomId/commit', verifyToken, async (req, res) => {
+  const { code } = req.body;
+
+  try {
+    const room = await Room.findOne({ roomId: req.params.roomId });
+    
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Add the new code version to the codeHistory
+    room.codeHistory.push({ code });
+    await room.save();
+
+    res.status(200).json({ message: 'Code committed successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
   
 module.exports = router;
