@@ -5,8 +5,10 @@ import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload'; // Import FileUpload component
 import './styles.css';
-
+import { useNavigate  } from 'react-router-dom';
 const socket = io('http://localhost:5000');
+
+
 
 function RoomPage() {
   const { roomId } = useParams();
@@ -14,6 +16,7 @@ function RoomPage() {
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
   const [files, setFiles] = useState([]); // State to hold the list of files
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -64,6 +67,11 @@ function RoomPage() {
     setCode(fileContent); // Load the file content into the editor
   };
 
+  //Video Call
+  const handleVideoCall = () => {
+  navigate(`/room/${roomId}/video-call`);
+  };
+
   if (error) {
     return <p>Error: {error}</p>;
   }
@@ -106,9 +114,11 @@ function RoomPage() {
         <button onClick={handleCommitChanges}>Commit Changes</button>
         <h2>Upload File</h2>
         <FileUpload roomId={roomId} /> {/* Add the file upload section */}
+        <button onClick={handleVideoCall}>Start Video Call</button> {/* Video Call Button */}
       </div>
     </div>
   );
 }
+
 
 export default RoomPage;

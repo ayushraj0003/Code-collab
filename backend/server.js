@@ -42,16 +42,22 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
-    console.log(`User joined room: ${roomId}`);
   });
 
-  socket.on('codeChange', ({ roomId, code }) => {
-    socket.to(roomId).emit('codeUpdate', code); // Broadcast the code change to all users in the room
+  socket.on('offer', ({ offer, roomId }) => {
+    socket.to(roomId).emit('offer', offer);
+  });
+
+  socket.on('answer', ({ answer, roomId }) => {
+    socket.to(roomId).emit('answer', answer);
+  });
+
+  socket.on('candidate', ({ candidate, roomId }) => {
+    socket.to(roomId).emit('candidate', candidate);
   });
 
   socket.on('leaveRoom', (roomId) => {
     socket.leave(roomId);
-    console.log(`User left room: ${roomId}`);
   });
 
   socket.on('disconnect', () => {

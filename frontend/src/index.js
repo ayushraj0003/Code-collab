@@ -5,6 +5,7 @@ import Login from './login';
 import Signup from './register';
 import Dashboard from './Dashboard';
 import RoomPage from './RoomPage';
+import VideoCallPage from './VideoCallPage';
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
         <Route path='/signup' element={<Login />}/>
         <Route path='/dashboard' element={<Dashboard/>}/>
         <Route path="/rooms/:roomId" element={<RoomPage />} />
+        <Route path="/room/:roomId/video-call" element={<VideoCallPage/>} />
       </Routes>
     </Router>
   );

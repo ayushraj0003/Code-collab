@@ -256,3 +256,17 @@ body {
     height: 100vw;
     width: 100%;
   }
+
+  .video-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+  
+  .local-video, .remote-video {
+    width: 45%;
+    height: auto;
+    border: 1px solid #ccc;
+    background-color: #000;
+  }
+  
