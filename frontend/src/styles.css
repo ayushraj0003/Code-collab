@@ -222,3 +222,37 @@ body {
     }
   }
   
+
+  .code-editor-container {
+    /* width: 100vw; */
+    /* height: 100vh; Adjust the height as needed */
+    
+    border: 1px solid #ddd;
+    margin-top: 290px;
+    height: 1000px;
+
+  }
+  
+  .CodeMirror {
+    font-size: 16px; /* Optional: Adjust font size */
+  }
+  
+  .room-container{
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:20px;
+  }
+
+  .room-left{
+    align-self: left;
+    height:100vh;
+    width:50vw
+  }
+
+  .room-right{
+    height: 100vw;
+    width: 100%;
+  }

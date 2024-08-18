@@ -19,6 +19,16 @@ const RoomSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     }],
+    codeHistory: [{ // Add this field for version control
+      code: {
+        type: String,
+        required: true,
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+    }],
   });
   
 

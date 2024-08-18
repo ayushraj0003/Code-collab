@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { Controlled as CodeMirror } from 'react-codemirror2';
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/theme/material.css';
+import 'codemirror/mode/javascript/javascript'; // Import JavaScript mode
+import CodeEditor from './CodeEditor';
 
 function RoomPage() {
   const { roomId } = useParams(); // Get roomId from the URL
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
+  const [code, setCode] = useState('// Write your code here...');
 
   useEffect(() => {
     const fetchRoomUsers = async () => {
@@ -33,7 +39,8 @@ function RoomPage() {
   }
 
   return (
-    <div>
+    <div className='room-container'>
+      <div className="room-left">
       <h1>Room: {room.roomName}</h1>
       <h2>Users in this Room:</h2>
       {room.users && room.users.length > 0 ? (
@@ -45,6 +52,14 @@ function RoomPage() {
       ) : (
         <p>No users found.</p>
       )}
+      </div>
+
+      <div className="room-right">
+      <h2>Code Editor</h2>
+      <CodeEditor/>
+      </div>
+
+
     </div>
   );
 }
