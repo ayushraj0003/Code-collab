@@ -2,6 +2,10 @@ const express = require('express');
 const crypto = require('crypto'); // Import crypto module
 const Room = require('../models/Room');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 const router = express.Router();
 
@@ -176,5 +180,42 @@ router.post('/:roomId/commit', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+router.post('/:roomId/upload', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Ensure the `files` array exists
+    if (!room.files) {
+      room.files = [] ; // Initialize the array if it doesn't exist
+    }
+
+    const { originalname, buffer } = req.file;
+    const content = buffer.toString('utf-8'); // Convert file buffer to string
+
+    console.log('Before:', room.files); // Log before pushing
+
+    room.files.push({
+      filename: originalname,
+      content,
+      author: req.user.userId, // Assuming req.user.id is available from verifyToken middleware
+    });
+
+    console.log('After:', room.files); // Log after pushing
+
+    await room.save();
+    console.log('Room saved successfully with files:', room.files);
+    res.status(200).json({ message: 'File uploaded successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
   
 module.exports = router;

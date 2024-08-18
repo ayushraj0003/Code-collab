@@ -3,18 +3,18 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
+import FileUpload from './FileUpload'; // Import FileUpload component
 import './styles.css';
 
-const socket = io('http://localhost:5000'); // Connect to your backend
+const socket = io('http://localhost:5000');
 
 function RoomPage() {
-  const { roomId } = useParams(); // Get roomId from the URL
+  const { roomId } = useParams();
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
 
   useEffect(() => {
-    // Fetch room users
     const fetchRoomUsers = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -28,20 +28,19 @@ function RoomPage() {
     };
     fetchRoomUsers();
 
-    // Listen for code updates from the server
-    socket.emit('joinRoom', roomId); // Join the room on the server
+    socket.emit('joinRoom', roomId);
     socket.on('codeUpdate', (updatedCode) => {
       setCode(updatedCode);
     });
 
     return () => {
-      socket.emit('leaveRoom', roomId); // Leave the room on component unmount
+      socket.emit('leaveRoom', roomId);
     };
   }, [roomId]);
 
   const handleCodeChange = (newCode) => {
     setCode(newCode);
-    socket.emit('codeChange', { roomId, code: newCode }); // Send updated code to the server
+    socket.emit('codeChange', { roomId, code: newCode });
   };
 
   const handleCommitChanges = async () => {
@@ -86,6 +85,8 @@ function RoomPage() {
         <h2>Code Editor</h2>
         <CodeEditor code={code} onCodeChange={handleCodeChange} />
         <button onClick={handleCommitChanges}>Commit Changes</button>
+        <h2>Upload File</h2>
+        <FileUpload roomId={roomId} /> {/* Add the file upload section */}
       </div>
     </div>
   );

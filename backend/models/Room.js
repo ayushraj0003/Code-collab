@@ -19,7 +19,7 @@ const RoomSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     }],
-    codeHistory: [{ // Add this field for version control
+    codeHistory: [{ // Add this field for version controlc
       code: {
         type: String,
         required: true,
@@ -27,8 +27,14 @@ const RoomSchema = new mongoose.Schema({
       timestamp: {
         type: Date,
         default: Date.now,
-      },
-    }],
+      }}],
+      files: [
+        {
+          filename: String,
+          content: String,
+          author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        }
+      ],
   });
   
 
