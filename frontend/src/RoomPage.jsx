@@ -13,20 +13,23 @@ function RoomPage() {
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
+  const [files, setFiles] = useState([]); // State to hold the list of files
 
   useEffect(() => {
-    const fetchRoomUsers = async () => {
+    const fetchRoomData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}/users`, {
+        const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRoom(response.data);
+        setFiles(response.data.files || []); // Set the files from the room data
       } catch (err) {
         setError(err.message);
       }
     };
-    fetchRoomUsers();
+
+    fetchRoomData();
 
     socket.emit('joinRoom', roomId);
     socket.on('codeUpdate', (updatedCode) => {
@@ -57,6 +60,10 @@ function RoomPage() {
     }
   };
 
+  const handleFileClick = async (fileContent) => {
+    setCode(fileContent); // Load the file content into the editor
+  };
+
   if (error) {
     return <p>Error: {error}</p>;
   }
@@ -78,6 +85,18 @@ function RoomPage() {
           </ul>
         ) : (
           <p>No users found.</p>
+        )}
+        <h2>Files in this Room:</h2>
+        {files.length > 0 ? (
+          <ul>
+            {files.map((file, index) => (
+              <li key={index} onClick={() => handleFileClick(file.content)}>
+                {file.filename}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No files found.</p>
         )}
       </div>
 

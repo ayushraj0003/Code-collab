@@ -217,5 +217,24 @@ router.post('/:roomId/upload', verifyToken, upload.single('file'), async (req, r
   }
 });
 
+router.get('/:roomId', verifyToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    
+    // Find the room by its roomId
+    const room = await Room.findOne({ roomId }).populate('users', 'name'); // Populating users to get their names
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Respond with room data including files
+    res.status(200).json(room);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
   
 module.exports = router;
