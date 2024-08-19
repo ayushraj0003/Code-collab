@@ -14,6 +14,7 @@ function RoomPage() {
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
   const [files, setFiles] = useState([]);
+  const [folders, setFolders] = useState([]); // Added state to handle folders
   const [selectedFile, setSelectedFile] = useState(null);
   const [authorName, setAuthorName] = useState(null); // Changed variable name to be more descriptive
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ function RoomPage() {
         });
         setRoom(response.data);
         setFiles(response.data.files || []);
+        setFolders(response.data.folders || []); // Initialize folders
       } catch (err) {
         setError(err.message);
       }
@@ -91,9 +93,68 @@ function RoomPage() {
     }
   };
 
+  const handleFolderClick = async (file, folderPath = '') => {
+    setSelectedFile(file);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const cleanedFolderPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath; // Remove leading slash
+  
+      const response = await axios.get(
+        `http://localhost:5000/api/rooms/${roomId}/folder-file`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { folderPath: cleanedFolderPath, filename: file.filename },
+        }
+      );
+    
+      // Load the latest file content into the editor
+      setCode(response.data.content);
+    
+      // Fetch the author's name from the backend
+      const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    
+      setAuthorName(authorResponse.data.name);
+    } catch (err) {
+      setError('Failed to fetch the latest file version.');
+    }
+  };
+  
+  
+
   const handleVideoCall = () => {
     navigate(`/room/${roomId}/video-call`);
   };
+
+  // Function to render folder structure recursively
+  const renderFolders = (folderData, path = '') => {
+    return (
+      <ul>
+        {folderData && folderData.length > 0 ? (
+          folderData.map((folder, index) => (
+            <li key={index}>
+              <strong>{folder.folderName}</strong>
+              {folder.files && folder.files.length > 0 && (
+                <ul>
+                  {folder.files.map((file, fileIndex) => (
+                    <li key={fileIndex} onClick={() => handleFolderClick(file, `${path}/${folder.folderName}`)}>
+                      {file.filename}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {folder.subfolders && renderFolders(folder.subfolders, `${path}/${folder.folderName}`)}
+            </li>
+          ))
+        ) : (
+          <p>No folders available</p>
+        )}
+      </ul>
+    );
+  };
+  
 
   if (error) {
     return <p>Error: {error}</p>;
@@ -111,7 +172,7 @@ function RoomPage() {
         {room.users && room.users.length > 0 ? (
           <ul>
             {room.users.map((user) => (
-              <li key={user._id}>{user.name}</li> 
+              <li key={user._id}>{user.name}</li>
             ))}
           </ul>
         ) : (
@@ -129,6 +190,8 @@ function RoomPage() {
         ) : (
           <p>No files found.</p>
         )}
+        <h2>Folder Structure:</h2>
+        {renderFolders(folders)}
       </div>
 
       <div className="room-right">

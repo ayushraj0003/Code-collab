@@ -239,19 +239,22 @@ router.get('/:roomId', verifyToken, async (req, res) => {
     const { roomId } = req.params;
     
     // Find the room by its roomId
-    const room = await Room.findOne({ roomId }).populate('users', 'name'); // Populating users to get their names
+    const room = await Room.findOne({ roomId })
+      .populate('users', 'name') // Populating users to get their names
+      .populate('folders.files.owner', 'name'); // Populate file owners' names
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Respond with room data including files
+    // Respond with room data including folders and files
     res.status(200).json(room);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
   try {
@@ -334,6 +337,57 @@ router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async 
 
     await room.save();
     res.status(200).json({ message: 'Folder uploaded successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/:roomId/folder-file', verifyToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { folderPath, filename } = req.query;
+
+    console.log('Received folderPath:', folderPath);  // Log received path
+    console.log('Received filename:', filename);  // Log received filename
+
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Log all folder paths in the room for comparison
+    console.log('Available folder paths:', room.folders.map(folder => folder.path));
+
+    // Decode folderPath to handle any URL encoding
+    const decodedFolderPath = decodeURIComponent(folderPath);
+    console.log('Decoded folderPath:', decodedFolderPath);  // Log decoded path
+
+    // Find the folder by decoded path
+    const folder = room.folders.find(folder => folder.path === decodedFolderPath);
+
+    if (!folder) {
+      console.log('Folder not found for path:', decodedFolderPath);  // Log failure
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    const file = folder.files.find(file => file.filename === filename);
+
+    if (!file) {
+      console.log('File not found in folder');  // Log file not found
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    const latestCode = file.codeHistory.length > 0
+      ? file.codeHistory[file.codeHistory.length - 1].code
+      : '';
+
+    const latestAuth = file.codeHistory.length > 0
+      ? file.codeHistory[file.codeHistory.length - 1].author
+      : '';
+
+    res.status(200).json({ content: latestCode, latestAuth });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

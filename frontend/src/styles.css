@@ -270,3 +270,20 @@ body {
     background-color: #000;
   }
   
+  .folder {
+    margin-left: 20px;
+  }
+  
+  .subfolders {
+    margin-left: 20px;
+  }
+  
+  .room-left ul {
+    list-style: none;
+  }
+  
+  .room-left ul li {
+    cursor: pointer;
+    padding: 5px 0;
+  }
+  
