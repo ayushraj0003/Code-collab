@@ -1,41 +1,43 @@
 const mongoose = require('mongoose');
 
 const RoomSchema = new mongoose.Schema({
-    roomId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    userId: {
+  roomId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  roomName: {
+    type: String,
+    required: true,
+  },
+  users: [
+    {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
     },
-    roomName: {
-      type: String,
-      required: true,
-    },
-    users: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    }],
-    codeHistory: [{ // Add this field for version controlc
-      code: {
-        type: String,
-        required: true,
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now,
-      }}],
-      files: [
+  ],
+  files: [
+    {
+      filename: String,
+      content: String,
+      owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      codeHistory: [
         {
-          filename: String,
-          content: String,
+          code: String,
+          timestamp: {
+            type: Date,
+            default: Date.now,
+          },
           author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        }
+        },
       ],
-  });
-  
+    },
+  ],
+});
 
 module.exports = mongoose.model('Room', RoomSchema);

@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload'; // Import FileUpload component
 import './styles.css';
-import { useNavigate  } from 'react-router-dom';
+
 const socket = io('http://localhost:5000');
-
-
 
 function RoomPage() {
   const { roomId } = useParams();
@@ -16,6 +14,7 @@ function RoomPage() {
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
   const [files, setFiles] = useState([]); // State to hold the list of files
+  const [selectedFile, setSelectedFile] = useState(null); // Track the currently selected file
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,11 +49,16 @@ function RoomPage() {
   };
 
   const handleCommitChanges = async () => {
+    if (!selectedFile) {
+      alert('Please select a file to commit changes.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:5000/api/rooms/${roomId}/save-code`,
-        { code },
+        `http://localhost:5000/api/rooms/${roomId}/commit`,
+        { filename: selectedFile.filename, newContent: code },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('Code committed successfully!');
@@ -63,13 +67,25 @@ function RoomPage() {
     }
   };
 
-  const handleFileClick = async (fileContent) => {
-    setCode(fileContent); // Load the file content into the editor
+  const handleFileClick = async (file) => {
+    setSelectedFile(file);
+  
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}/file/${file.filename}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      // Load the latest file content into the editor
+      setCode(response.data.content);
+    } catch (err) {
+      setError('Failed to fetch the latest file version.');
+    }
   };
+  
 
-  //Video Call
   const handleVideoCall = () => {
-  navigate(`/room/${roomId}/video-call`);
+    navigate(`/room/${roomId}/video-call`);
   };
 
   if (error) {
@@ -98,7 +114,7 @@ function RoomPage() {
         {files.length > 0 ? (
           <ul>
             {files.map((file, index) => (
-              <li key={index} onClick={() => handleFileClick(file.content)}>
+              <li key={index} onClick={() => handleFileClick(file)}>
                 {file.filename}
               </li>
             ))}
@@ -119,6 +135,5 @@ function RoomPage() {
     </div>
   );
 }
-
 
 export default RoomPage;

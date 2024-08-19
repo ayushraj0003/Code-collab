@@ -161,17 +161,31 @@ router.post('/:roomId/save-code', verifyToken, async (req, res) => {
 });
 
 router.post('/:roomId/commit', verifyToken, async (req, res) => {
-  const { code } = req.body;
+  const { filename, newContent } = req.body;
 
   try {
     const room = await Room.findOne({ roomId: req.params.roomId });
-    
+
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Add the new code version to the codeHistory
-    room.codeHistory.push({ code });
+    const file = room.files.find(f => f.filename === filename);
+
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Add the new code version to the file's version history
+    file.codeHistory.push({
+      code: file.content,
+      author: req.user.userId , // Assuming `req.user.id` contains the user ID of the author
+    });
+
+    // Update the file content with the new content
+    file.content = newContent;
+    file.author = req.user.id;
+
     await room.save();
 
     res.status(200).json({ message: 'Code committed successfully' });
@@ -203,8 +217,9 @@ router.post('/:roomId/upload', verifyToken, upload.single('file'), async (req, r
     room.files.push({
       filename: originalname,
       content,
-      author: req.user.userId, // Assuming req.user.id is available from verifyToken middleware
+      owner: req.user.userId, // Assuming req.user.id is available from verifyToken middleware
     });
+
 
     console.log('After:', room.files); // Log after pushing
 
@@ -236,5 +251,28 @@ router.get('/:roomId', verifyToken, async (req, res) => {
   }
 });
 
-  
+router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
+  try {
+    const { roomId, filename } = req.params;
+
+    // Find the room by roomId and file by filename
+    const room = await Room.findOne({ roomId, 'files.filename': filename });
+    if (!room) {
+      return res.status(404).json({ message: 'Room or file not found' });
+    }
+
+    const file = room.files.find(file => file.filename === filename);
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Return the latest version of the file content
+    res.status(200).json({ content: file.content });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 module.exports = router;
