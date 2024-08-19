@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
-import FileUpload from './FileUpload'; // Import FileUpload component
+import FileUpload from './FileUpload';
 import './styles.css';
 
 const socket = io('http://localhost:5000');
@@ -13,8 +13,9 @@ function RoomPage() {
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
-  const [files, setFiles] = useState([]); // State to hold the list of files
-  const [selectedFile, setSelectedFile] = useState(null); // Track the currently selected file
+  const [files, setFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [authorName, setAuthorName] = useState(null); // Changed variable name to be more descriptive
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,7 +26,7 @@ function RoomPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRoom(response.data);
-        setFiles(response.data.files || []); // Set the files from the room data
+        setFiles(response.data.files || []);
       } catch (err) {
         setError(err.message);
       }
@@ -69,20 +70,26 @@ function RoomPage() {
 
   const handleFileClick = async (file) => {
     setSelectedFile(file);
-  
+
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}/file/${file.filename}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       // Load the latest file content into the editor
       setCode(response.data.content);
+
+      // Fetch the author's name from the backend instead of just the ID
+      const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setAuthorName(authorResponse.data.name);
     } catch (err) {
       setError('Failed to fetch the latest file version.');
     }
   };
-  
 
   const handleVideoCall = () => {
     navigate(`/room/${roomId}/video-call`);
@@ -97,14 +104,14 @@ function RoomPage() {
   }
 
   return (
-    <div className='room-container'>
+    <div className="room-container">
       <div className="room-left">
         <h1>Room: {room.roomName}</h1>
         <h2>Users in this Room:</h2>
         {room.users && room.users.length > 0 ? (
           <ul>
             {room.users.map((user) => (
-              <li key={user._id}>{user.name}</li>
+              <li key={user._id}>{user.name}</li> 
             ))}
           </ul>
         ) : (
@@ -128,9 +135,11 @@ function RoomPage() {
         <h2>Code Editor</h2>
         <CodeEditor code={code} onCodeChange={handleCodeChange} />
         <button onClick={handleCommitChanges}>Commit Changes</button>
+
         <h2>Upload File</h2>
-        <FileUpload roomId={roomId} /> {/* Add the file upload section */}
-        <button onClick={handleVideoCall}>Start Video Call</button> {/* Video Call Button */}
+        <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p> {/* Display author's name */}
+        <FileUpload roomId={roomId} />
+        <button onClick={handleVideoCall}>Start Video Call</button>
       </div>
     </div>
   );

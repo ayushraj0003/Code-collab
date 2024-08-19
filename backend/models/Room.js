@@ -24,7 +24,6 @@ const RoomSchema = new mongoose.Schema({
   files: [
     {
       filename: String,
-      content: String,
       owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       codeHistory: [
         {

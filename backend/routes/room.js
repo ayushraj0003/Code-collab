@@ -178,13 +178,9 @@ router.post('/:roomId/commit', verifyToken, async (req, res) => {
 
     // Add the new code version to the file's version history
     file.codeHistory.push({
-      code: file.content,
+      code: newContent,
       author: req.user.userId , // Assuming `req.user.id` contains the user ID of the author
     });
-
-    // Update the file content with the new content
-    file.content = newContent;
-    file.author = req.user.id;
 
     await room.save();
 
@@ -209,17 +205,23 @@ router.post('/:roomId/upload', verifyToken, upload.single('file'), async (req, r
       room.files = [] ; // Initialize the array if it doesn't exist
     }
 
+
     const { originalname, buffer } = req.file;
     const content = buffer.toString('utf-8'); // Convert file buffer to string
 
     console.log('Before:', room.files); // Log before pushing
 
-    room.files.push({
+    const newFile = {
       filename: originalname,
-      content,
-      owner: req.user.userId, // Assuming req.user.id is available from verifyToken middleware
-    });
+      owner: req.user.userId, // Assuming req.user.userId is available from verifyToken middleware
+      codeHistory: [{
+        code: content,
+        author: req.user.userId,
+      }],
+    };
 
+    // Push the new file to the files array
+    room.files.push(newFile);
 
     console.log('After:', room.files); // Log after pushing
 
@@ -256,7 +258,8 @@ router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
     const { roomId, filename } = req.params;
 
     // Find the room by roomId and file by filename
-    const room = await Room.findOne({ roomId, 'files.filename': filename });
+    const room = await Room.findOne({ roomId, 'files.filename': filename })
+
     if (!room) {
       return res.status(404).json({ message: 'Room or file not found' });
     }
@@ -266,8 +269,15 @@ router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'File not found' });
     }
 
-    // Return the latest version of the file content
-    res.status(200).json({ content: file.content });
+    const latestCode = file.codeHistory.length > 0 
+      ? file.codeHistory[file.codeHistory.length - 1].code 
+      : '';
+
+    const auth = file.codeHistory.length > 0 
+    ? file.codeHistory[file.codeHistory.length - 1].author 
+    : '';
+
+    res.status(200).json({ content: latestCode,  latestAuth: auth});
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
