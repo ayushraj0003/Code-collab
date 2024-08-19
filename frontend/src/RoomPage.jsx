@@ -136,9 +136,9 @@ function RoomPage() {
         <CodeEditor code={code} onCodeChange={handleCodeChange} />
         <button onClick={handleCommitChanges}>Commit Changes</button>
 
-        <h2>Upload File</h2>
-        <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p> {/* Display author's name */}
+        <h2>Upload Folder</h2>
         <FileUpload roomId={roomId} />
+        <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p>
         <button onClick={handleVideoCall}>Start Video Call</button>
       </div>
     </div>

@@ -285,4 +285,61 @@ router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
 });
 
 
+router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const folderStructure = JSON.parse(req.body.folderStructure);  // Parse folderStructure from the request body
+
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Validate that folderStructure is an object
+    if (typeof folderStructure !== 'object' || folderStructure === null) {
+      return res.status(400).json({ message: 'Invalid folder structure' });
+    }
+
+    // Add the folder structure and files to the room
+    const processFolder = (folderData, folderName) => {
+      if (folderData && Array.isArray(folderData.files)) {
+        const files = folderData.files.map((fileData) => ({
+          filename: fileData.name,
+          owner: req.user.userId,
+          codeHistory: [
+            {
+              code: req.files.find(f => f.originalname === fileData.name).buffer.toString('utf-8'),
+              author: req.user.userId,
+            },
+          ],
+        }));
+
+        room.folders.push({
+          folderName: folderName,
+          path: folderName, // Store folder path
+          files,
+        });
+      } else {
+        // Recursively process subfolders
+        Object.keys(folderData).forEach(subFolder => {
+          processFolder(folderData[subFolder], `${folderName}/${subFolder}`);
+        });
+      }
+    };
+
+    Object.keys(folderStructure).forEach((folder) => {
+      processFolder(folderStructure[folder], folder);
+    });
+
+    await room.save();
+    res.status(200).json({ message: 'Folder uploaded successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
 module.exports = router;

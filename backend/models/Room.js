@@ -37,6 +37,28 @@ const RoomSchema = new mongoose.Schema({
       ],
     },
   ],
+  folders: [
+    {
+      folderName: String,
+      path: String, // Store the full path of the folder/file
+      files: [
+        {
+          filename: String,
+          owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          codeHistory: [
+            {
+              code: String,
+              timestamp: {
+                type: Date,
+                default: Date.now,
+              },
+              author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            },
+          ],
+        },
+      ],
+    },
+  ],
 });
 
 module.exports = mongoose.model('Room', RoomSchema);
