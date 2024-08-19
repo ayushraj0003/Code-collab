@@ -56,19 +56,38 @@ function RoomPage() {
       alert('Please select a file to commit changes.');
       return;
     }
-
+  
+    console.log('Selected File:', selectedFile);  // Debugging line
+    
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
-        `http://localhost:5000/api/rooms/${roomId}/commit`,
-        { filename: selectedFile.filename, newContent: code },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      if (selectedFile.folderPath) {
+        // Handle committing changes to a file in a folder
+        const cleanedFolderPath = selectedFile.folderPath.startsWith('/') ? selectedFile.folderPath.slice(1) : selectedFile.folderPath;
+        await axios.post(
+          `http://localhost:5000/api/rooms/${roomId}/commit-folder-file`,
+          {
+            folderPath: cleanedFolderPath,
+            filename: selectedFile.filename,
+            newContent: code,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        // Handle committing changes to a file not in a folder
+        await axios.post(
+          `http://localhost:5000/api/rooms/${roomId}/commit`,
+          { filename: selectedFile.filename, newContent: code },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+  
       alert('Code committed successfully!');
     } catch (err) {
       setError(err.message);
     }
   };
+  
 
   const handleFileClick = async (file) => {
     setSelectedFile(file);
@@ -94,11 +113,15 @@ function RoomPage() {
   };
 
   const handleFolderClick = async (file, folderPath = '') => {
-    setSelectedFile(file);
+    // Set the selected file with folderPath included
+    setSelectedFile({
+      ...file,
+      folderPath: folderPath.startsWith('/') ? folderPath : `/${folderPath}`, // Ensure the folderPath is correctly set
+    });
     
     try {
       const token = localStorage.getItem('token');
-      const cleanedFolderPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath; // Remove leading slash
+      const cleanedFolderPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath; // Remove leading slash if present
   
       const response = await axios.get(
         `http://localhost:5000/api/rooms/${roomId}/folder-file`,
@@ -107,15 +130,15 @@ function RoomPage() {
           params: { folderPath: cleanedFolderPath, filename: file.filename },
         }
       );
-    
+      
       // Load the latest file content into the editor
       setCode(response.data.content);
-    
+  
       // Fetch the author's name from the backend
       const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-    
+  
       setAuthorName(authorResponse.data.name);
     } catch (err) {
       setError('Failed to fetch the latest file version.');

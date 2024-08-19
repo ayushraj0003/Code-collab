@@ -394,6 +394,40 @@ router.get('/:roomId/folder-file', verifyToken, async (req, res) => {
   }
 });
 
+router.post('/:roomId/commit-folder-file', verifyToken, async (req, res) => {
+  const { folderPath, filename, newContent } = req.body;
+
+  try {
+    const room = await Room.findOne({ roomId: req.params.roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    const folder = room.folders.find(f => f.path === folderPath);
+    if (!folder) {
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    const file = folder.files.find(f => f.filename === filename);
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Add the new code version to the file's version history
+    file.codeHistory.push({
+      code: newContent,
+      author: req.user.userId, // Assuming `req.user.userId` contains the user ID of the author
+    });
+
+    await room.save();
+
+    res.status(200).json({ message: 'Code committed successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 
 module.exports = router;
