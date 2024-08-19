@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect(process.env.MONGO_URIS, {
     // useNewUrlParser: true,
     // useUnifiedTopology: true,
 })
@@ -54,6 +54,9 @@ io.on('connection', (socket) => {
 
   socket.on('candidate', ({ candidate, roomId }) => {
     socket.to(roomId).emit('candidate', candidate);
+  });
+  socket.on('codeChange', ({ roomId, code }) => {
+    socket.to(roomId).emit('codeUpdate', code);
   });
 
   socket.on('leaveRoom', (roomId) => {
