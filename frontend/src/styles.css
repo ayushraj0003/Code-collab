@@ -286,4 +286,7 @@ body {
     cursor: pointer;
     padding: 5px 0;
   }
+  .typing-indicators {
+    color :white;
+  }
   

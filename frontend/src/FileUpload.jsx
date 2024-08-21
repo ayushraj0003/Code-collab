@@ -3,10 +3,16 @@ import axios from 'axios';
 
 function FileUpload({ roomId }) {
   const [files, setFiles] = useState([]);
+  const [singleFile, setSingleFile] = useState(null);
 
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
     setFiles(selectedFiles);
+  };
+
+  const handleSingleFileChange = (event) => {
+    const file = event.target.files[0];
+    setSingleFile(file);
   };
 
   const handleFileUpload = async () => {
@@ -46,8 +52,30 @@ function FileUpload({ roomId }) {
     }
   };
 
+  const handleSingleFileUpload = async () => {
+    if (!singleFile) return;
+
+    const formData = new FormData();
+    formData.append('file', singleFile);
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `http://localhost:5000/api/rooms/${roomId}/upload-file`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+      );
+      alert('File uploaded successfully');
+      setSingleFile(null); // Reset single file input
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      alert('Failed to upload file');
+    }
+  };
+
   return (
     <div>
+      <h3>Upload Folder</h3>
       <input
         type="file"
         webkitdirectory="true"
@@ -55,6 +83,13 @@ function FileUpload({ roomId }) {
         multiple
       />
       <button onClick={handleFileUpload}>Upload Folder</button>
+
+      <h3>Upload Single File</h3>
+      <input
+        type="file"
+        onChange={handleSingleFileChange}
+      />
+      <button onClick={handleSingleFileUpload}>Upload File</button>
     </div>
   );
 }

@@ -191,7 +191,7 @@ router.post('/:roomId/commit', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/:roomId/upload', verifyToken, upload.single('file'), async (req, res) => {
+router.post('/:roomId/upload-file', verifyToken, upload.single('file'), async (req, res) => {
   try {
     const { roomId } = req.params;
     const room = await Room.findOne({ roomId });

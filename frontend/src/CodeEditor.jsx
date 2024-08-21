@@ -1,31 +1,42 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material.css';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/clike/clike';
 import 'codemirror/mode/python/python';
-import './styles.css';
 import io from 'socket.io-client';
 
 const socket = io('http://localhost:5000'); // Adjust the URL as needed
 
-function CodeEditor({ roomId, code, onCodeChange }) {
-  const [language, setLanguage] = React.useState('javascript');
+const CodeEditor = ({ code, onCodeChange, roomId }) => {
+  const [language, setLanguage] = useState('javascript');
+  const [typingUsers, setTypingUsers] = useState({});
 
   useEffect(() => {
-    // Join the room for real-time collaboration
-    socket.emit('joinRoom', roomId);
+    if (roomId) {
+      socket.emit('joinRoom', roomId);
 
-    // Listen for code updates from other users
-    socket.on('codeUpdate', (updatedCode) => {
-      onCodeChange(updatedCode);
-    });
+      socket.on('codeUpdate', (updatedCode) => {
+        onCodeChange(updatedCode);
+      });
 
-    // Clean up on component unmount
-    return () => {
-      socket.emit('leaveRoom', roomId);
-    };
+      socket.on('userTyping', ({ lineNumber, username }) => {
+        console.log(`Typing event received for line ${lineNumber} by ${username}`);
+        setTypingUsers((prev) => ({ ...prev, [lineNumber]: username }));
+        setTimeout(() => {
+          setTypingUsers((prev) => {
+            const newTypingUsers = { ...prev };
+            delete newTypingUsers[lineNumber];
+            return newTypingUsers;
+          });
+        }, 3000);
+      });
+
+      return () => {
+        socket.emit('leaveRoom', roomId);
+      };
+    }
   }, [roomId, onCodeChange]);
 
   const handleLanguageChange = (event) => {
@@ -34,7 +45,15 @@ function CodeEditor({ roomId, code, onCodeChange }) {
 
   const handleCodeChange = (editor, data, value) => {
     onCodeChange(value);
-    socket.emit('codeChange', { roomId, code: value }); // Emit code change to the server
+    socket.emit('codeChange', { roomId, code: value });
+  };
+
+  const handleCursorActivity = (editor) => {
+    const cursor = editor.getCursor();
+    const lineNumber = cursor.line + 1; // Convert zero-indexed to one-indexed
+    const username = localStorage.getItem('username') || 'Unknown User'; // Retrieve or default to avoid null
+    console.log(`Emitting typing event for line ${lineNumber} by ${username}`);
+    socket.emit('typing', { roomId, lineNumber, username });
   };
 
   return (
@@ -54,9 +73,19 @@ function CodeEditor({ roomId, code, onCodeChange }) {
           lineNumbers: true,
         }}
         onBeforeChange={handleCodeChange}
+        onCursorActivity={handleCursorActivity}
       />
+
+      <div className="typing-indicators">
+        <p>jhsadsa</p>
+        {Object.keys(typingUsers).map((lineNumber) => (
+          <div key={lineNumber}>
+            <p>{typingUsers[lineNumber]} is typing on line {lineNumber}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};
 
 export default CodeEditor;

@@ -219,7 +219,7 @@ function RoomPage() {
 
       <div className="room-right">
         <h2>Code Editor</h2>
-        <CodeEditor code={code} onCodeChange={handleCodeChange} />
+        <CodeEditor code={code} onCodeChange={handleCodeChange} roomId={room} />
         <button onClick={handleCommitChanges}>Commit Changes</button>
 
         <h2>Upload Folder</h2>

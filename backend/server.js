@@ -66,6 +66,10 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
+  socket.on('typing', ({ roomId, lineNumber, username }) => {
+    console.log(`Typing event received for room ${roomId}, line ${lineNumber} by ${username}`);
+    socket.to(roomId).emit('userTyping', { lineNumber, username });
+  });
 });
 
 // Start Server
