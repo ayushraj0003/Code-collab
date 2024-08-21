@@ -25,34 +25,26 @@ function verifyToken(req, res, next) {
 
 // Register Route
 router.post('/register', async (req, res) => {
-    const { name, email, password, mobile } = req.body;
+  const { name, email, password, mobile, avatar } = req.body;
 
-    try {
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
-        }
+  try {
+      let user = await User.findOne({ email });
+      if (user) {
+          return res.status(400).json({ msg: 'User already exists' });
+      }
 
-        // const mobileRegex = /^[0-9]{10}$/;
-        // if (!mobileRegex.test(mobile)) {
-        //     return res.status(400).json({
-        //         msg: "Please enter a valid 10-digit mobile number."
-        //     });
-        // }
+      user = new User({ name, email, password, mobile, avatar });
+      await user.save();
 
-        user = new User({ name,email, password, mobile});
-        await user.save();
+      const payload = { userId: user.id };
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        const payload = { userId: user.id };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        res.status(201).json({ token });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
+      res.status(201).json({ token });
+  } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+  }
 });
-
 // Login Route
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;

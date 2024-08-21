@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        lowercase: true, 
+        lowercase: true,
         validate: {
             validator: function(value) {
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -21,6 +21,7 @@ const UserSchema = new mongoose.Schema({
     mobile: {
         type: String,
         required: true,
+        // Uncomment and adjust regex validation as needed
         // validate: {
         //     validator: function(value) {
         //         return /^[0-9]{10}$/.test(value);  
@@ -31,6 +32,7 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
+        // Uncomment and adjust validation as needed
         // minlength: 8,
         // validate: {
         //     validator: function(value) {
@@ -38,6 +40,10 @@ const UserSchema = new mongoose.Schema({
         //     },
         //     message: "Password must be at least 8 characters long and contain at least one numerical digit and one special character."
         // }
+    },
+    avatar: {
+        type: String,
+        default: ''
     }
 });
 
