@@ -9,7 +9,7 @@ function Dashboard() {
   const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   const [isCreateRoomVisible, setIsCreateRoomVisible] = useState(false);
   const [isJoinRoomVisible, setIsJoinRoomVisible] = useState(false);
 
@@ -78,14 +78,13 @@ function Dashboard() {
     navigate(`/rooms/${roomId}`);
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prevState) => !prevState);
-  };
+
 
   return (
     <div className="dashboard-container">
-      <div className={`profile ${isSidebarOpen ? 'open' : 'closed'}`}>
-        {isSidebarOpen && (
+      <div className="profile-container">
+      <img src="/images/logo2.png" alt="Logo" className="dash-logo" />
+        {(
           <div className="profile-content">
             {error ? (
               <p className="error">Error: {error}</p>
@@ -94,18 +93,19 @@ function Dashboard() {
                 <div>
                   <p className="dashboard-welcome">Welcome, {userDetails.name}</p>
                   <p className="dashboard-email">Email: {userDetails.email}</p>
-                  <img src={userDetails.avatar} alt="User Avatar" className="avatar" />
+                  <img src={userDetails.avatar} alt="User Avatar" className="user-avatar" />
                 </div>
               )
             )}
           </div>
         )}
       </div>
-      <div className='r'>
-        <div className={`dash ${isSidebarOpen ? '' : 'expanded'}`}>
+      <div className="main-content">
+      <h1>Dashboard</h1>
+        <div className="dash">
           <button
             onClick={() => setIsCreateRoomVisible(!isCreateRoomVisible)}
-            className="createjoin"
+            className="create-btn"
           >
             {isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}
           </button>
@@ -121,7 +121,7 @@ function Dashboard() {
 
           <button
             onClick={() => setIsJoinRoomVisible(!isJoinRoomVisible)}
-            className="createjoin"
+            className="join-btn"
           >
             {isJoinRoomVisible ? 'Cancel Join Room' : 'Join Room'}
           </button>
@@ -135,7 +135,7 @@ function Dashboard() {
             <button onClick={joinRoom}>Join Room</button>
           </div>
         </div>
-        <div className='room-containers'>
+        <div className="room-containers">
           <h2>My Rooms</h2>
           <div className="rooms-list">
             {rooms.length > 0 ? (
@@ -146,22 +146,16 @@ function Dashboard() {
                   onClick={() => handleRoomClick(room.roomId)}
                 >
                   <h3>{room.roomName}</h3>
-                  <p>Room ID: {room.roomId}</p>
+                  <p>{room.roomId}</p>
                 </div>
               ))
             ) : (
               <p>No rooms found.</p>
             )}
           </div>
-          <button onClick={toggleSidebar} className='btn'>
-            {isSidebarOpen ? 'Close Profile' : 'Open Profile'}
-          </button>
+
         </div>
       </div>
-
-
-
-
     </div>
   );
 }

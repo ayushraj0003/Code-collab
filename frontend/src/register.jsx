@@ -14,7 +14,13 @@ function Signup() {
 
   const avatars = [
     "/images/avatar1.jpg",
-    "/images/avatar2.jpg"
+    "/images/avatar2.jpg",
+    "/images/avatar3.jpg",
+    "/images/avatar4.jpg",
+    "/images/avatar5.jpg",
+    "/images/avatar6.jpg",
+    "/images/avatar7.jpg",
+    "/images/avatar8.jpg",
   ];
 
   const handleChange = (event) => {
@@ -50,7 +56,7 @@ function Signup() {
     <div className="login-container">
       <div className="leftlogin">
         <div className="login-header">
-          <img src="/images/logo.jpg" alt="Logo" className="login-logo" />
+          <img src="/images/logo2.png" alt="Logo" className="login-logo" />
           <h1>Create Account</h1>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
