@@ -9,6 +9,8 @@ function Dashboard() {
   const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
+  const [createdRoomId, setCreatedRoomId] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const [isCreateRoomVisible, setIsCreateRoomVisible] = useState(false);
   const [isJoinRoomVisible, setIsJoinRoomVisible] = useState(false);
@@ -46,10 +48,11 @@ function Dashboard() {
         { roomName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(`Room created successfully with ID: ${response.data.roomId}`);
       setRooms([...rooms, { roomId: response.data.roomId, roomName }]);
+      setCreatedRoomId(response.data.roomId);
       setRoomName('');
       setIsCreateRoomVisible(false);
+      setShowSuccessMessage(true);
     } catch (err) {
       setError(err.message);
       console.error('Error creating room:', err);
@@ -78,65 +81,82 @@ function Dashboard() {
     navigate(`/rooms/${roomId}`);
   };
 
-
+  const handleCopyRoomId = () => {
+    navigator.clipboard.writeText(createdRoomId);
+    setShowSuccessMessage(false); // Collapse the success message and button
+  };
 
   return (
     <div className="dashboard-container">
       <div className="profile-container">
-      <img src="/images/logo2.png" alt="Logo" className="dash-logo" />
-        {(
-          <div className="profile-content">
-            {error ? (
-              <p className="error">Error: {error}</p>
-            ) : (
-              userDetails && (
-                <div>
-                  <p className="dashboard-welcome">Welcome, {userDetails.name}</p>
-                  <p className="dashboard-email">Email: {userDetails.email}</p>
-                  <img src={userDetails.avatar} alt="User Avatar" className="user-avatar" />
-                </div>
-              )
-            )}
-          </div>
-        )}
+        <img src="/images/logo2.png" alt="Logo" className="dash-logo" />
+        <div className="profile-content">
+          {error ? (
+            <p className="error">Error: {error}</p>
+          ) : (
+            userDetails && (
+              <div>
+                <p className="dashboard-welcome">Welcome, {userDetails.name}</p>
+                <p className="dashboard-email">Email: {userDetails.email}</p>
+                <img src={userDetails.avatar} alt="User Avatar" className="user-avatar" />
+              </div>
+            )
+          )}
+        </div>
       </div>
       <div className="main-content">
-      <h1>Dashboard</h1>
+        <h1>Dashboard</h1>
         <div className="dash">
-          <button
-            onClick={() => setIsCreateRoomVisible(!isCreateRoomVisible)}
-            className="create-btn"
-          >
-            {isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}
-          </button>
-          <div className={`form-container ${isCreateRoomVisible ? 'visible' : ''}`}>
-            <input
-              type="text"
-              placeholder="Enter Room Name"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-            />
-            <button onClick={createRoom}>Create Room</button>
+          <div className='create-container'>
+          
+              <>
+                <button
+                  onClick={() => setIsCreateRoomVisible(!isCreateRoomVisible)}
+                  className="create-btn"
+                >
+                  {isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}
+                </button>
+                {isCreateRoomVisible && (
+                  <div className="form-container visible">
+                    <input
+                      type="text"
+                      placeholder="Enter Room Name"
+                      value={roomName}
+                      onChange={(e) => setRoomName(e.target.value)}
+                    />
+                    <button onClick={createRoom}>Create Room</button>
+                  </div>
+                )}
+              </>
+            
+            {showSuccessMessage && (
+              <div className="copy-room-id">
+                <p>Room created successfully with ID: {createdRoomId}</p>
+                <button onClick={handleCopyRoomId}>Copy Room ID</button>
+              </div>
+            )}
           </div>
 
-          <button
-            onClick={() => setIsJoinRoomVisible(!isJoinRoomVisible)}
-            className="join-btn"
-          >
-            {isJoinRoomVisible ? 'Cancel Join Room' : 'Join Room'}
-          </button>
-          <div className={`form-container ${isJoinRoomVisible ? 'visible' : ''}`}>
-            <input
-              type="text"
-              placeholder="Enter Room ID"
-              value={roomIdToJoin}
-              onChange={(e) => setRoomIdToJoin(e.target.value)}
-            />
-            <button onClick={joinRoom}>Join Room</button>
+          <div className='join-container'>
+            <button
+              onClick={() => setIsJoinRoomVisible(!isJoinRoomVisible)}
+              className="join-btn"
+            >
+              {isJoinRoomVisible ? 'Cancel Join Room' : 'Join Room'}
+            </button>
+            <div className={`form-container ${isJoinRoomVisible ? 'visible' : ''}`}>
+              <input
+                type="text"
+                placeholder="Enter Room ID"
+                value={roomIdToJoin}
+                onChange={(e) => setRoomIdToJoin(e.target.value)}
+              />
+              <button onClick={joinRoom}>Join Room</button>
+            </div>
           </div>
         </div>
         <div className="room-containers">
-          <h2>My Rooms</h2>
+          <h1>My Rooms</h1>
           <div className="rooms-list">
             {rooms.length > 0 ? (
               rooms.map((room) => (
@@ -153,7 +173,6 @@ function Dashboard() {
               <p>No rooms found.</p>
             )}
           </div>
-
         </div>
       </div>
     </div>
