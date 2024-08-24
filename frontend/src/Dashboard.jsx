@@ -11,11 +11,24 @@ function Dashboard() {
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
   const [createdRoomId, setCreatedRoomId] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-
   const [isCreateRoomVisible, setIsCreateRoomVisible] = useState(false);
   const [isJoinRoomVisible, setIsJoinRoomVisible] = useState(false);
 
+  const [roomBackgroundImages, setRoomBackgroundImages] = useState({}); // Store background images for rooms
+
   const navigate = useNavigate();
+
+  const backgroundImages = [
+    '/images/bg1.jpg',
+    '/images/bg2.jpg',
+    '/images/bg3.jpg',
+    '/images/bg4.jpg',
+    '/images/bg5.jpg',
+    '/images/bg6.jpg',
+    '/images/bg7.jpg',
+    '/images/bg8.jpg',
+    // Add more image paths
+  ];
 
   useEffect(() => {
     const fetchUserDetailsAndRooms = async () => {
@@ -31,7 +44,17 @@ function Dashboard() {
         const roomsResponse = await axios.get('http://localhost:5000/api/rooms/my-rooms', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setRooms(roomsResponse.data);
+
+        const roomsData = roomsResponse.data;
+
+        // Assign random background images to each room
+        const initialBackgroundImages = {};
+        roomsData.forEach((room) => {
+          initialBackgroundImages[room.roomId] = getRandomBackgroundImage();
+        });
+
+        setRoomBackgroundImages(initialBackgroundImages);
+        setRooms(roomsData);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching data:', err);
@@ -86,6 +109,12 @@ function Dashboard() {
     setShowSuccessMessage(false); // Collapse the success message and button
   };
 
+  // Function to get a random image URL
+  const getRandomBackgroundImage = () => {
+    const randomIndex = Math.floor(Math.random() * backgroundImages.length);
+    return backgroundImages[randomIndex];
+  };
+
   return (
     <div className="dashboard-container">
       <div className="profile-container">
@@ -108,27 +137,23 @@ function Dashboard() {
         <h1>Dashboard</h1>
         <div className="dash">
           <div className='create-container'>
-          
-              <>
-                <button
-                  onClick={() => setIsCreateRoomVisible(!isCreateRoomVisible)}
-                  className="create-btn"
-                >
-                  {isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}
-                </button>
-                {isCreateRoomVisible && (
-                  <div className="form-container visible">
-                    <input
-                      type="text"
-                      placeholder="Enter Room Name"
-                      value={roomName}
-                      onChange={(e) => setRoomName(e.target.value)}
-                    />
-                    <button onClick={createRoom}>Create Room</button>
-                  </div>
-                )}
-              </>
-            
+            <button
+              onClick={() => setIsCreateRoomVisible(!isCreateRoomVisible)}
+              className="create-btn"
+            >
+              {isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}
+            </button>
+            {isCreateRoomVisible && (
+              <div className="form-container visible">
+                <input
+                  type="text"
+                  placeholder="Enter Room Name"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                />
+                <button onClick={createRoom}>Create Room</button>
+              </div>
+            )}
             {showSuccessMessage && (
               <div className="copy-room-id">
                 <p>Room created successfully with ID: {createdRoomId}</p>
@@ -164,9 +189,12 @@ function Dashboard() {
                   key={room.roomId}
                   className="room-card"
                   onClick={() => handleRoomClick(room.roomId)}
+                  style={{ backgroundImage: `url(${roomBackgroundImages[room.roomId]})` }} // Use the stored background image
                 >
-                  <h3>{room.roomName}</h3>
-                  <p>{room.roomId}</p>
+                  <div className="room-info">
+                    <h3>{room.roomName}</h3>
+                    <p>{room.roomId}</p>
+                  </div>
                 </div>
               ))
             ) : (
