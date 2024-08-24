@@ -634,12 +634,12 @@
 
 
 /* this is the new css  */
-.dashboard-container {
+/* .dashboard-container {
   display: flex;
   position: relative;
   height: 100vh;
   width: 100vw;
-  background-color: #eaf0f0; /* Light grey background */
+  background-color: #eaf0f0; 
  
   box-sizing: border-box;
   margin: 0;
@@ -649,7 +649,7 @@
   position: relative;
   
   width: 250px;
-  background-color: #636D79; /* Grey color */
+  background-color: #636D79;
   color: #fff;
   padding: 20px;
   border-top-right-radius: 20px;
@@ -659,6 +659,7 @@
   flex-direction: column;
   gap: 20px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
 
 .main-content {
@@ -672,7 +673,49 @@
   z-index: 2;
   border-radius: 30px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+} */
+ /* Ensure the container takes the full height and width of the viewport */
+.dashboard-container {
+  display: flex;
+  height: 100vh; /* Full height of the viewport */
+  width: 100vw; /* Full width of the viewport */
+  background-color: #eaf0f0; /* Light grey background */
+  margin: 0;
+  box-sizing: border-box;
 }
+
+/* Profile container taking full height and specific width */
+.profile-container {
+  width: 250px; /* Fixed width */
+  background-color: #636D79; /* Grey color */
+  color: #fff;
+  padding: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%; /* Full height of the dashboard container */
+  box-sizing: border-box;
+}
+
+/* Main content taking up the remaining space */
+.main-content {
+  flex-grow: 1; /* Take up remaining width */
+  background-color: #F2F2F2;
+  padding: 30px;
+  border-radius: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+   /* Add some margin between profile and main content */
+  height: 100%; /* Full height of the dashboard container */
+  box-sizing: border-box;
+  overflow: auto; /* Add scrolling if content exceeds the height */
+  position: absolute;
+  left: 215px;
+  z-index: 2; /* Ensure it stays below any other content with a higher z-index */
+}
+
 
 
 .dash {
@@ -885,7 +928,7 @@ input {
   flex-direction: column;
   flex-wrap: wrap;
   overflow :hidden;
-  
+
 
 
 
