@@ -240,8 +240,11 @@ router.get('/:roomId', verifyToken, async (req, res) => {
     
     // Find the room by its roomId
     const room = await Room.findOne({ roomId })
-      .populate('users', 'name') // Populating users to get their names
-      .populate('folders.files.owner', 'name'); // Populate file owners' names
+    .populate({
+      path: 'users',  // Populate users field
+      select: 'name avatar', // Select both name and avatar fields
+    })
+      .populate('folders.files.owner', 'name');// Populate file owners' names
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });

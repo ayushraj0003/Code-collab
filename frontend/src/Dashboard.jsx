@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './styles.css';
-import { FaSearch, FaTimes } from 'react-icons/fa'; // Import icons from Font Awesome
+import { FaSearch, FaTimes, FaSignOutAlt } from 'react-icons/fa'; // Import the logout icon
 
 function Dashboard() {
   const [userDetails, setUserDetails] = useState(null);
@@ -19,7 +19,6 @@ function Dashboard() {
   const [roomBackgroundImages, setRoomBackgroundImages] = useState({}); 
 
   const navigate = useNavigate();
-
   const backgroundImages = [
     '/images/bg1.jpg',
     '/images/bg2.jpg',
@@ -79,9 +78,21 @@ function Dashboard() {
         { roomName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+  
       const newRoom = { roomId: response.data.roomId, roomName };
+  
+      // Generate a background image for the new room
+      const newRoomBackgroundImage = getRandomBackgroundImage();
+  
       setRooms([...rooms, newRoom]);
       setFilteredRooms([...rooms, newRoom]);
+  
+      // Update the room background images state
+      setRoomBackgroundImages({
+        ...roomBackgroundImages,
+        [newRoom.roomId]: newRoomBackgroundImage
+      });
+  
       setCreatedRoomId(response.data.roomId);
       setRoomName('');
       setIsCreateRoomVisible(false);
@@ -91,6 +102,7 @@ function Dashboard() {
       console.error('Error creating room:', err);
     }
   };
+  
 
   const joinRoom = async () => {
     try {
@@ -101,8 +113,13 @@ function Dashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert(`Successfully joined the room: ${response.data.room.roomName}`);
+      const newRoomBackgroundImage = getRandomBackgroundImage();
       setRooms([...rooms, response.data.room]);
       setFilteredRooms([...rooms, response.data.room]);
+      setRoomBackgroundImages({
+        ...roomBackgroundImages,
+        [response.data.room.roomId]: newRoomBackgroundImage
+      });
       setRoomIdToJoin('');
       setIsJoinRoomVisible(false);
     } catch (err) {
@@ -126,7 +143,12 @@ function Dashboard() {
   };
 
   const handleClearSearch = () => {
-    setSearchTerm(''); // Clear the search input
+    setSearchTerm(''); 
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login'); // Redirect to the login page
   };
 
   return (
@@ -139,14 +161,20 @@ function Dashboard() {
           ) : (
             userDetails && (
               <div>
-                <p className="dashboard-welcome">Welcome, {userDetails.name}</p>
-                <p className="dashboard-email">Email: {userDetails.email}</p>
                 <img src={userDetails.avatar} alt="User Avatar" className="user-avatar" />
+                <p className="dashboard-welcome">{userDetails.name}</p>
               </div>
             )
           )}
+          <div className="logout">
+          <button onClick={handleLogout} className="logout-btn">
+            <FaSignOutAlt /> Logout
+          </button>
+          </div>
+
         </div>
       </div>
+
       <div className="main-content">
         <h1>Dashboard</h1>
         <div className="dash">
@@ -197,23 +225,23 @@ function Dashboard() {
 
         <div className="room-containers">
           <div className="room-search-container">
-          <h1>My Rooms</h1>
-          <div className="search-btn">
-          <input
-            type="text"
-            placeholder="Search Rooms"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="room-search-input"
-          />
-          {searchTerm ? (
-            <FaTimes className="search-icon" onClick={handleClearSearch} /> // Clear icon
-          ) : (
-            <FaSearch className="search-icon" /> // Magnifying icon
-          )}
+            <h1>My Rooms</h1>
+            <div className="search-btn">
+              <input
+                type="text"
+                placeholder="Search Rooms"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="room-search-input"
+              />
+              {searchTerm ? (
+                <FaTimes className="search-icon" onClick={handleClearSearch} /> // Clear icon
+              ) : (
+                <FaSearch className="search-icon" /> // Magnifying icon
+              )}
+            </div>
           </div>
-          
-        </div>
+
           <div className="rooms-list">
             {filteredRooms.length > 0 ? (
               filteredRooms.map((room) => (

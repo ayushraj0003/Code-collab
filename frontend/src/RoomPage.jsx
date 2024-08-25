@@ -27,6 +27,7 @@ function RoomPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRoom(response.data);
+        console.log(response.data)
         setFiles(response.data.files || []);
         setFolders(response.data.folders || []); // Initialize folders
       } catch (err) {
@@ -57,8 +58,6 @@ function RoomPage() {
       return;
     }
   
-    console.log('Selected File:', selectedFile);  // Debugging line
-    
     try {
       const token = localStorage.getItem('token');
       if (selectedFile.folderPath) {
@@ -87,7 +86,6 @@ function RoomPage() {
       setError(err.message);
     }
   };
-  
 
   const handleFileClick = async (file) => {
     setSelectedFile(file);
@@ -145,8 +143,6 @@ function RoomPage() {
     }
   };
   
-  
-
   const handleVideoCall = () => {
     navigate(`/room/${roomId}/video-call`);
   };
@@ -177,7 +173,6 @@ function RoomPage() {
       </ul>
     );
   };
-  
 
   if (error) {
     return <p>Error: {error}</p>;
@@ -189,43 +184,57 @@ function RoomPage() {
 
   return (
     <div className="room-container">
-      <div className="room-left">
-        <h1>Room: {room.roomName}</h1>
-        <h2>Users in this Room:</h2>
-        {room.users && room.users.length > 0 ? (
-          <ul>
-            {room.users.map((user) => (
-              <li key={user._id}>{user.name}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No users found.</p>
-        )}
-        <h2>Files in this Room:</h2>
-        {files.length > 0 ? (
-          <ul>
-            {files.map((file, index) => (
-              <li key={index} onClick={() => handleFileClick(file)}>
-                {file.filename}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No files found.</p>
-        )}
-        <h2>Folder Structure:</h2>
-        {renderFolders(folders)}
+      <div className="profile-container">
+        <div className="room-sidebar">
+          <img src="/images/logo2.png" alt="Logo" className="dash-logo" />
+          <h1>{room.roomName}</h1>
+          <h3>Members:</h3>
+          {room.users && room.users.length > 0 ? (
+            <ul>
+              {room.users.map((user) => (
+                <p key={user._id}>
+                <img 
+                  src={user.avatar} 
+                  alt={user.name} 
+                  className="member-avatar" 
+                />
+                {user.name}
+              </p>
+                
+              ))}
+            </ul>
+          ) : (
+            <p>No users found.</p>
+          )}
+        </div>
       </div>
 
-      <div className="room-right">
-        <h2>Code Editor</h2>
-        <CodeEditor code={code} onCodeChange={handleCodeChange} roomId={room} />
-        <button onClick={handleCommitChanges}>Commit Changes</button>
+      <div className="main-content">
+        <div className="room-content">
+          <h2>Files in this Room:</h2>
+          {files.length > 0 ? (
+            <ul>
+              {files.map((file, index) => (
+                <li key={index} onClick={() => handleFileClick(file)}>
+                  {file.filename}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No files found.</p>
+          )}
+          <h2>Folder Structure:</h2>
+          {renderFolders(folders)}
+        </div>
 
-        <h2>Upload Folder</h2>
-        <FileUpload roomId={roomId} />
-        <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p>
-        <button onClick={handleVideoCall}>Start Video Call</button>
+        <div className="room-right">
+          <button onClick={handleCommitChanges}>Commit Changes</button>
+
+          <h2>Upload Folder</h2>
+          <FileUpload roomId={roomId} />
+          <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p>
+          <button onClick={handleVideoCall}>Start Video Call</button>
+        </div>
       </div>
     </div>
   );
