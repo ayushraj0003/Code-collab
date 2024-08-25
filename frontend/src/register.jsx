@@ -56,7 +56,7 @@ function Signup() {
     <div className="login-container">
       <div className="leftlogin">
         <div className="login-header">
-          <img src="/images/logo2.png" alt="Logo" className="login-logo" />
+          <img src="/images/logo1.png" alt="Logo" className="login-logo" />
           <h1>Create Account</h1>
         </div>
         <form onSubmit={handleSubmit} className="login-form">

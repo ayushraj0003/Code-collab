@@ -15,8 +15,14 @@ function Dashboard() {
   const [isCreateRoomVisible, setIsCreateRoomVisible] = useState(false);
   const [isJoinRoomVisible, setIsJoinRoomVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); 
+  const [theme,settheme]=useState(false)
   const [filteredRooms, setFilteredRooms] = useState([]); 
   const [roomBackgroundImages, setRoomBackgroundImages] = useState({}); 
+  const [isSearchActive, setIsSearchActive] = useState(false);
+
+  const toggleSearch = () => {
+    setIsSearchActive(!isSearchActive);
+  };
 
   const navigate = useNavigate();
   const backgroundImages = [
@@ -150,10 +156,19 @@ function Dashboard() {
     localStorage.removeItem('token');
     navigate('/login'); // Redirect to the login page
   };
+  const setcolor=()=>{
+    if(theme){
+      settheme(false);
+    }else{
+      settheme(true)
+    }
+  }
+
+  
 
   return (
     <div className="dashboard-container">
-      <div className="profile-container">
+      <div className={`profile-container  ${theme ? 'white' : ''}`}>
         <img src="/images/logo2.png" alt="Logo" className="dash-logo" />
         <div className="profile-content">
           {error ? (
@@ -167,23 +182,25 @@ function Dashboard() {
             )
           )}
           <div className="logout">
-          <button onClick={handleLogout} className="logout-btn">
-            <FaSignOutAlt /> Logout
-          </button>
+            <button onClick={handleLogout} className="btn btn-one">
+              <span><FaSignOutAlt /> Logout</span>
+            </button>
           </div>
-
         </div>
       </div>
-
-      <div className="main-content">
+      
+      <div className={`main-content ${theme ? 'black' : ''}`}>
+        <button onClick={setcolor} className="btn btn-one">
+          <span>{theme ? 'White Theme' : 'Black Theme'}</span>
+        </button>
         <h1>Dashboard</h1>
         <div className="dash">
           <div className='create-container'>
             <button
               onClick={() => setIsCreateRoomVisible(!isCreateRoomVisible)}
-              className="create-btn"
+              className="btn btn-one"
             >
-              {isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}
+              <span>{isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}</span>
             </button>
             {isCreateRoomVisible && (
               <div className="form-container visible">
@@ -193,13 +210,17 @@ function Dashboard() {
                   value={roomName}
                   onChange={(e) => setRoomName(e.target.value)}
                 />
-                <button onClick={createRoom}>Create Room</button>
+                <button onClick={createRoom} className="btn btn-one">
+                  <span>Create Room</span>
+                </button>
               </div>
             )}
             {showSuccessMessage && (
               <div className="copy-room-id">
                 <p>Room created successfully with ID: {createdRoomId}</p>
-                <button onClick={handleCopyRoomId}>Copy Room ID</button>
+                <button onClick={handleCopyRoomId} className="btn btn-one">
+                  <span>Copy Room ID</span>
+                </button>
               </div>
             )}
           </div>
@@ -207,9 +228,9 @@ function Dashboard() {
           <div className='join-container'>
             <button
               onClick={() => setIsJoinRoomVisible(!isJoinRoomVisible)}
-              className="join-btn"
+              className="btn btn-one"
             >
-              {isJoinRoomVisible ? 'Cancel Join Room' : 'Join Room'}
+              <span>{isJoinRoomVisible ? 'Cancel Join Room' : 'Join Room'}</span>
             </button>
             <div className={`form-container ${isJoinRoomVisible ? 'visible' : ''}`}>
               <input
@@ -218,29 +239,33 @@ function Dashboard() {
                 value={roomIdToJoin}
                 onChange={(e) => setRoomIdToJoin(e.target.value)}
               />
-              <button onClick={joinRoom}>Join Room</button>
+              <button onClick={joinRoom} className="btn btn-one">
+                <span>Join Room</span>
+              </button>
             </div>
           </div>
         </div>
 
         <div className="room-containers">
-          <div className="room-search-container">
-            <h1>My Rooms</h1>
-            <div className="search-btn">
-              <input
-                type="text"
-                placeholder="Search Rooms"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="room-search-input"
-              />
-              {searchTerm ? (
-                <FaTimes className="search-icon" onClick={handleClearSearch} /> // Clear icon
-              ) : (
-                <FaSearch className="search-icon" /> // Magnifying icon
-              )}
-            </div>
-          </div>
+        <div className={`room-search-container ${isSearchActive ? 'active' : ''}`}>
+        <h1>My Rooms</h1>
+        <div className={`search-btn ${isSearchActive ? 'active' : ''}`}>
+          <form>
+            <input 
+              type="text"
+              placeholder="Search Rooms"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="room-search-input"
+            />
+            {isSearchActive ? (
+              <FaTimes className="search-icon" onClick={toggleSearch} /> 
+            ) : (
+              <FaSearch className="search-icon" onClick={toggleSearch} /> 
+            )}
+          </form>
+        </div>
+      </div>
 
           <div className="rooms-list">
             {filteredRooms.length > 0 ? (

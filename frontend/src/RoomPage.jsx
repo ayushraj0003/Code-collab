@@ -5,6 +5,7 @@ import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
 import './styles.css';
+import './design.css';
 
 const socket = io('http://localhost:5000');
 
@@ -14,9 +15,9 @@ function RoomPage() {
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
   const [files, setFiles] = useState([]);
-  const [folders, setFolders] = useState([]); // Added state to handle folders
+  const [folders, setFolders] = useState([]); 
   const [selectedFile, setSelectedFile] = useState(null);
-  const [authorName, setAuthorName] = useState(null); // Changed variable name to be more descriptive
+  const [authorName, setAuthorName] = useState(null); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,9 +28,8 @@ function RoomPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRoom(response.data);
-        console.log(response.data)
         setFiles(response.data.files || []);
-        setFolders(response.data.folders || []); // Initialize folders
+        setFolders(response.data.folders || []); 
       } catch (err) {
         setError(err.message);
       }
@@ -61,7 +61,6 @@ function RoomPage() {
     try {
       const token = localStorage.getItem('token');
       if (selectedFile.folderPath) {
-        // Handle committing changes to a file in a folder
         const cleanedFolderPath = selectedFile.folderPath.startsWith('/') ? selectedFile.folderPath.slice(1) : selectedFile.folderPath;
         await axios.post(
           `http://localhost:5000/api/rooms/${roomId}/commit-folder-file`,
@@ -73,7 +72,6 @@ function RoomPage() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
-        // Handle committing changes to a file not in a folder
         await axios.post(
           `http://localhost:5000/api/rooms/${roomId}/commit`,
           { filename: selectedFile.filename, newContent: code },
@@ -96,10 +94,8 @@ function RoomPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Load the latest file content into the editor
       setCode(response.data.content);
 
-      // Fetch the author's name from the backend instead of just the ID
       const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -110,16 +106,25 @@ function RoomPage() {
     }
   };
 
-  const handleFolderClick = async (file, folderPath = '') => {
-    // Set the selected file with folderPath included
+  const handleFolderClick = async (folderIndex) => {
+    setFolders(prevFolders =>
+      prevFolders.map((folder, index) =>
+        index === folderIndex
+          ? { ...folder, isOpen: !folder.isOpen }
+          : folder
+      )
+    );
+  };
+
+  const handleFileInFolderClick = async (file, folderPath = '') => {
     setSelectedFile({
       ...file,
-      folderPath: folderPath.startsWith('/') ? folderPath : `/${folderPath}`, // Ensure the folderPath is correctly set
+      folderPath: folderPath.startsWith('/') ? folderPath : `/${folderPath}`,
     });
     
     try {
       const token = localStorage.getItem('token');
-      const cleanedFolderPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath; // Remove leading slash if present
+      const cleanedFolderPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath;
   
       const response = await axios.get(
         `http://localhost:5000/api/rooms/${roomId}/folder-file`,
@@ -129,10 +134,8 @@ function RoomPage() {
         }
       );
       
-      // Load the latest file content into the editor
       setCode(response.data.content);
   
-      // Fetch the author's name from the backend
       const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -142,29 +145,32 @@ function RoomPage() {
       setError('Failed to fetch the latest file version.');
     }
   };
-  
+
   const handleVideoCall = () => {
     navigate(`/room/${roomId}/video-call`);
   };
 
-  // Function to render folder structure recursively
   const renderFolders = (folderData, path = '') => {
     return (
       <ul>
         {folderData && folderData.length > 0 ? (
           folderData.map((folder, index) => (
             <li key={index}>
-              <strong>{folder.folderName}</strong>
-              {folder.files && folder.files.length > 0 && (
+              <span onClick={() => handleFolderClick(index)}>
+                <img src="/images/folder.png" alt="Folder" className="folder-icon" />
+                <strong>{folder.folderName}</strong>
+              </span>
+              {folder.isOpen && folder.files && folder.files.length > 0 && (
                 <ul>
                   {folder.files.map((file, fileIndex) => (
-                    <li key={fileIndex} onClick={() => handleFolderClick(file, `${path}/${folder.folderName}`)}>
+                    <li key={fileIndex} onClick={() => handleFileInFolderClick(file, `${path}/${folder.folderName}`)}>
+                      <img src="/images/file.png" alt="File" className="folder-icon" />
                       {file.filename}
                     </li>
                   ))}
                 </ul>
               )}
-              {folder.subfolders && renderFolders(folder.subfolders, `${path}/${folder.folderName}`)}
+              {folder.isOpen && folder.subfolders && renderFolders(folder.subfolders, `${path}/${folder.folderName}`)}
             </li>
           ))
         ) : (
@@ -193,14 +199,9 @@ function RoomPage() {
             <ul>
               {room.users.map((user) => (
                 <p key={user._id}>
-                <img 
-                  src={user.avatar} 
-                  alt={user.name} 
-                  className="member-avatar" 
-                />
-                {user.name}
-              </p>
-                
+                  <img src={user.avatar} alt={user.name} className="member-avatar" />
+                  {user.name}
+                </p>
               ))}
             </ul>
           ) : (
@@ -216,6 +217,7 @@ function RoomPage() {
             <ul>
               {files.map((file, index) => (
                 <li key={index} onClick={() => handleFileClick(file)}>
+                  <img src="/images/file.jpg" alt="File" />
                   {file.filename}
                 </li>
               ))}
