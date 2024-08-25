@@ -192,7 +192,7 @@ function Dashboard() {
                   style={{ backgroundImage: `url(${roomBackgroundImages[room.roomId]})` }} // Use the stored background image
                 >
                   <div className="room-info">
-                    <h3>{room.roomName}</h3>
+                    <p>{room.roomName}</p>
                     <p>{room.roomId}</p>
                   </div>
                 </div>

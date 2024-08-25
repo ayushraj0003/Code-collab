@@ -725,31 +725,6 @@
   margin-bottom: 20px;
 }
 
-.create-btn {
-  background-color: #007bff;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  width: 600px;
-  height: 100px;
-  font-size: 30px;
-  font-weight: bold;
-}
-.join-btn{
-  background-color: #4E9F3D;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  width: 600px;
-  height: 100px;
-  font-size: 30px;
-  font-weight: bold;
-}
-
 .createjoin:hover {
   background-color: #0056b3;
 }
@@ -791,37 +766,6 @@
   margin-top: 20px;
 }
 
-/* .rooms-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  margin-top: 20px;
-}
-
-.room-card {
-  background-color: #f8f8f8;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-radius: 10px;
-  align-items: center;
-  font-size: 30px;
-  height: 210px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3), 0 10px 10px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-  transform: perspective(1000px) rotateX(0) rotateY(0);
-  transform-style: preserve-3d;
-}
-
-.room-card:hover {
-  background-color: #8BB6A2;
-  transform: perspective(1000px) rotateX(-10deg) rotateY(10deg);
-  box-shadow: 0 30px 50px rgba(0, 0, 0, 0.4), 0 15px 15px rgba(0, 0, 0, 0.3);
-  width: 150px;
-  transition: transform 0.5s ease,width 0.5s ease;
-} */
 .rooms-list {
   display: flex;
   flex-wrap: wrap;
@@ -890,54 +834,13 @@ input {
   background-color: greenyellow;
 }
 
-.room-card {
-  position: relative;
-  width: 220px;
-  height: 300px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center  ;
-  font-size: 25px;
-  
-  
-}
 
 .room-card:hover {
   transform: scale(1.05); /* Slightly enlarge the card */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
-.room-info {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-  font-weight: lighter;
-  
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  overflow :hidden;
 
-
-
-
-}
-
-.room-card:hover .room-info {
-  display: block;
-}
 .dashboard-container {
   display: flex;
   height: 100vh; /* Full height of the viewport */
@@ -982,7 +885,7 @@ input {
   display: flex;
   gap: 60px;
   margin-bottom: 20px;
-  flex-direction: column; /* Stack buttons vertically on smaller screens */
+  flex-direction: row; 
 }
 
 .create-btn  {
@@ -1005,7 +908,8 @@ input {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  width: 600px;
+  /* width: 600px; */ width: 100%;
+  max-width: 600px; /* Limit width on larger screens */
   height: 100px;
   font-size: 30px;
   font-weight: bold;
@@ -1086,8 +990,11 @@ input {
 }
 
 .profile-content {
+  padding: 10px;
   font-size: 20px;
   font-weight: bold;
+  overflow-wrap: break-word; /* Break long words to wrap within container */
+    word-break: break-word; 
 }
 
 .join-container, .create-container {
@@ -1135,20 +1042,22 @@ input {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: end;
   align-items: center;
   font-size: 25px;
 }
 
 .room-card:hover {
-  transform: scale(1.05); /* Slightly enlarge the card */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  transform: scale(1.19); /* Slightly enlarge the card */
+  box-shadow: 4px 20px 16px rgba(0, 0, 0, 0.5); /* Increase shadow on hover */
+  z-index: 1; /* Elevate the card above others */
+  margin: 1px;
 }
 
 .room-info {
-  position: absolute;
+  /* position: absolute;
   bottom: 10px;
-  left: 10px;
+  left: 10px; */
   background: rgba(0, 0, 0, 0.6);
   color: white;
   padding: 10px;
@@ -1173,6 +1082,9 @@ input {
 
   .profile-container {
     width: 100%;
+    height: 30%;
+    display: flex;
+    flex-direction: row;
     border-radius: 0;
     border-bottom-right-radius: 20px;
     border-bottom-left-radius: 20px;
