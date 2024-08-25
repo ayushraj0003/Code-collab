@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './styles.css';
+import { FaSearch, FaTimes } from 'react-icons/fa'; // Import icons from Font Awesome
 
 function Dashboard() {
   const [userDetails, setUserDetails] = useState(null);
@@ -13,8 +14,9 @@ function Dashboard() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isCreateRoomVisible, setIsCreateRoomVisible] = useState(false);
   const [isJoinRoomVisible, setIsJoinRoomVisible] = useState(false);
-
-  const [roomBackgroundImages, setRoomBackgroundImages] = useState({}); // Store background images for rooms
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const [filteredRooms, setFilteredRooms] = useState([]); 
+  const [roomBackgroundImages, setRoomBackgroundImages] = useState({}); 
 
   const navigate = useNavigate();
 
@@ -27,7 +29,6 @@ function Dashboard() {
     '/images/bg6.jpg',
     '/images/bg7.jpg',
     '/images/bg8.jpg',
-    // Add more image paths
   ];
 
   useEffect(() => {
@@ -47,7 +48,6 @@ function Dashboard() {
 
         const roomsData = roomsResponse.data;
 
-        // Assign random background images to each room
         const initialBackgroundImages = {};
         roomsData.forEach((room) => {
           initialBackgroundImages[room.roomId] = getRandomBackgroundImage();
@@ -55,6 +55,7 @@ function Dashboard() {
 
         setRoomBackgroundImages(initialBackgroundImages);
         setRooms(roomsData);
+        setFilteredRooms(roomsData);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching data:', err);
@@ -62,6 +63,13 @@ function Dashboard() {
     };
     fetchUserDetailsAndRooms();
   }, []);
+
+  useEffect(() => {
+    const results = rooms.filter((room) =>
+      room.roomName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredRooms(results);
+  }, [searchTerm, rooms]);
 
   const createRoom = async () => {
     try {
@@ -71,7 +79,9 @@ function Dashboard() {
         { roomName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setRooms([...rooms, { roomId: response.data.roomId, roomName }]);
+      const newRoom = { roomId: response.data.roomId, roomName };
+      setRooms([...rooms, newRoom]);
+      setFilteredRooms([...rooms, newRoom]);
       setCreatedRoomId(response.data.roomId);
       setRoomName('');
       setIsCreateRoomVisible(false);
@@ -92,6 +102,7 @@ function Dashboard() {
       );
       alert(`Successfully joined the room: ${response.data.room.roomName}`);
       setRooms([...rooms, response.data.room]);
+      setFilteredRooms([...rooms, response.data.room]);
       setRoomIdToJoin('');
       setIsJoinRoomVisible(false);
     } catch (err) {
@@ -106,13 +117,16 @@ function Dashboard() {
 
   const handleCopyRoomId = () => {
     navigator.clipboard.writeText(createdRoomId);
-    setShowSuccessMessage(false); // Collapse the success message and button
+    setShowSuccessMessage(false);
   };
 
-  // Function to get a random image URL
   const getRandomBackgroundImage = () => {
     const randomIndex = Math.floor(Math.random() * backgroundImages.length);
     return backgroundImages[randomIndex];
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm(''); // Clear the search input
   };
 
   return (
@@ -180,16 +194,34 @@ function Dashboard() {
             </div>
           </div>
         </div>
+
         <div className="room-containers">
+          <div className="room-search-container">
           <h1>My Rooms</h1>
+          <div className="search-btn">
+          <input
+            type="text"
+            placeholder="Search Rooms"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="room-search-input"
+          />
+          {searchTerm ? (
+            <FaTimes className="search-icon" onClick={handleClearSearch} /> // Clear icon
+          ) : (
+            <FaSearch className="search-icon" /> // Magnifying icon
+          )}
+          </div>
+          
+        </div>
           <div className="rooms-list">
-            {rooms.length > 0 ? (
-              rooms.map((room) => (
+            {filteredRooms.length > 0 ? (
+              filteredRooms.map((room) => (
                 <div
                   key={room.roomId}
                   className="room-card"
                   onClick={() => handleRoomClick(room.roomId)}
-                  style={{ backgroundImage: `url(${roomBackgroundImages[room.roomId]})` }} // Use the stored background image
+                  style={{ backgroundImage: `url(${roomBackgroundImages[room.roomId]})` }}
                 >
                   <div className="room-info">
                     <p>{room.roomName}</p>
