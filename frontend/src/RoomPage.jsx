@@ -19,6 +19,7 @@ function RoomPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [authorName, setAuthorName] = useState(null); 
   const navigate = useNavigate();
+  const [repoUrl, setRepoUrl] = useState('');
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -84,7 +85,23 @@ function RoomPage() {
       setError(err.message);
     }
   };
-
+  const handleRepoUrlSubmit = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`http://localhost:5000/api/rooms/${roomId}/github-upload`, {
+        repoUrl,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      // Update the files and folders in the room with the new ones from GitHub
+      setFiles(response.data.files);
+      setFolders(response.data.folders);
+      alert('Files uploaded successfully from GitHub repository!');
+    } catch (err) {
+      alert('Failed to upload files from GitHub repository.');
+    }
+  };
   const handleFileClick = async (file) => {
     setSelectedFile(file);
 
@@ -236,6 +253,16 @@ function RoomPage() {
           <FileUpload roomId={roomId} />
           <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p>
           <button onClick={handleVideoCall}>Start Video Call</button>
+          <div className="github-repo-upload">
+  <h2>Upload Files from GitHub</h2>
+  <input 
+    type="text" 
+    placeholder="Enter GitHub repo URL" 
+    value={repoUrl} 
+    onChange={(e) => setRepoUrl(e.target.value)} 
+  />
+  <button onClick={handleRepoUrlSubmit}>Upload from GitHub</button>
+</div>
         </div>
       </div>
     </div>

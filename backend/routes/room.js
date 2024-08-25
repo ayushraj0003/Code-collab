@@ -3,6 +3,7 @@ const crypto = require('crypto'); // Import crypto module
 const Room = require('../models/Room');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+const axios=require('axios')
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -431,6 +432,67 @@ router.post('/:roomId/commit-folder-file', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+const extractRepoInfo = (repoUrl) => {
+  // Regular expression to match and capture owner and repo names
+  const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
+  const match = repoUrl.match(regex);
+
+  if (match && match.length === 3) {
+    const owner = match[1];
+    const repoName = match[2];
+    return { owner, repoName };
+  } else {
+    throw new Error('Invalid GitHub URL');
+  }
+};
+const getGitHubFiles = async (repoUrl) => {
+  const { owner, repoName } = extractRepoInfo(repoUrl);
+  console.log(repoUrl)
+  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/contents`;
+
+  try {
+    const response = await axios.get(apiUrl);
+    return response.data;
+  } catch (err) {
+    throw new Error(`Failed to fetch files from GitHub: ${err.message}`);
+  }
+};
+
+router.post('/:roomId/github-upload', async (req, res) => {
+  const { repoUrl } = req.body;
+  const { roomId } = req.params;
+
+  try {
+    const files = await getGitHubFiles(repoUrl);
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+
+    for (const file of files) {
+      if (file.type === 'file') {
+        const fileContent = Buffer.from(file.content, 'base64').toString('utf-8');
+
+        room.files.push({
+          filename: file.name,
+          owner: req.user._id, // Assuming the requesting user is the owner
+          codeHistory: [{
+            code: fileContent,
+            author: req.user._id, // Assuming the requesting user is the author
+          }],
+        });
+      }
+    }
+
+    await room.save();
+    res.status(200).json({ files: room.files, folders: room.folders });
+  } catch (err) {
+    console.error(`Error uploading files: ${err.message}`);
+    res.status(500).json({ message: 'Failed to upload files from GitHub repository.' });
+  }
+});
+
 
 
 module.exports = router;
