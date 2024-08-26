@@ -122,7 +122,11 @@ function Signup() {
           <p>Already a user? <Link to="/login">Log in</Link></p>
         </div>
       </div>
-      <div className="rightlogin"></div>
+      <div className="rightlogin">
+        <img src="/images/banner2.webp" alt="Banner" />
+        <img src="/images/banner3.jpg" alt="Banner" />
+        <img src="/images/banner4.gif" alt="Banner" />
+      </div>
     </div>
   );
 }

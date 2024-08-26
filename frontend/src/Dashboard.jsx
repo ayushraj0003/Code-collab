@@ -154,7 +154,7 @@ function Dashboard() {
   return (
     <div className="dashboard-container">
       <div className="profile-container">
-        <img src="/images/logo2.png" alt="Logo" className="dash-logo" />
+        <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
         <div className="profile-content">
           {error ? (
             <p className="error">Error: {error}</p>

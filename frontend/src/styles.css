@@ -3,36 +3,17 @@
   padding: 0;
 }
 
-.login-header {
-  margin-bottom: 20px;
-}
-
-.login-logo {
-  width: 50px;
-  height: auto;
-  margin-bottom: 20px;
-}
-
-.login-header h1 {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.login-header p {
-  color: #888;
-  margin-bottom: 20px;
+.login-form{
+  width: 100%;
 }
 
 .input-group {
-  margin-bottom: 15px;
   text-align: left;
 }
 
 .input-group label {
   display: block;
   font-weight: bold;
-  margin-bottom: 5px;
 }
 
 .input-group input {
@@ -119,8 +100,12 @@
   text-decoration: underline;
 }
 
-
-
+.rightlogin {
+  width: 60%;
+  height: 100%;
+  margin: 0; 
+  padding: 0; 
+}
 
 .login-container {
   display: flex;
@@ -128,87 +113,48 @@
   width: 100vw;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 .leftlogin {
   width: 50%;
-  padding: 20px;
+  flex: 1;
+  padding: 5px;
   box-sizing: border-box;
   text-align: center;
-  margin-top: 100px;
+  /* margin-top: 10%; */
 }
 
 .rightlogin {
-  background-color: red;
-  width: 50%;
-  height: 100vh;
-  margin: 0; /* Remove any margin */
-  padding: 0; /* Remove any padding */
-}
-
-
-
-.login-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-}
-
-.leftlogin {
-  width: 50%;
-  padding: 20px;
-  box-sizing: border-box;
-  text-align: center;
-  margin-top: 100px;
-}
-
-.rightlogin {
-  background-color: red;
   width: 50%;
   height: 100vh;
   margin: 0;
   padding: 0;
+  flex: 1;
 }
 
-.login-header {
-  margin-bottom: 20px;
-}
 
-.login-logo {
-  width: 50px;
-  height: auto;
-  margin-bottom: 20px;
-}
-
-.login-header h1 {
-  font-size: 28px;
+.login-header h1{
+  font-size: 25px;
   font-weight: bold;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
+}
+
+
+.login-logo{
+  height: 100px;
+  width: 150px;
 }
 
 .input-group {
-  margin-bottom: 15px;
   text-align: left;
 }
 
 .input-group label {
   display: block;
   font-weight: bold;
-  margin-bottom: 5px;
 }
 
-.input-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
-}
 
 .input-group input:focus {
   border-color: #007bff;
@@ -253,26 +199,13 @@
   .avatar-options {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
-  }
-  
-  .avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: border-color 0.3s ease;
+    flex-wrap: wrap;
   }
   
   .avatar.selected {
     border-color: #007bff;
   }
-  .login-logo{
-    height: 100px;
-    width: auto;
-    border-radius: 10rem;
-  }
+
   .profile {
     background-color: #282c34;
     width: 230px;
@@ -280,8 +213,8 @@
   }
 
 .avatar {
-  width: 100px;
-  height: 100px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
 }
 
@@ -531,6 +464,7 @@ input {
 
 .create-btn:hover, .join-btn:hover {
   background-color: #0056b3;
+  
 }
 
 .form-container {
@@ -809,7 +743,129 @@ input {
   
   color: black;
 }
-.dash-logo,.login-logo{
+.dash-logo{
   height: 180px;
   width: 200px;
 }
+
+/* Container for the sliding images */
+.rightlogin {
+  position: relative;
+  max-width: 600px; /* Adjust based on your layout */
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Wrapper for the images */
+.rightlogin img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+/* Initial slide setup */
+.rightlogin img:first-child {
+  opacity: 1;
+}
+
+@keyframes slideAnimation {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.rightlogin img:nth-child(1) {
+  animation: slideAnimation 16s infinite;
+}
+
+.rightlogin img:nth-child(2) {
+  animation: slideAnimation 16s infinite 4s;
+}
+
+.rightlogin img:nth-child(3) {
+  animation: slideAnimation 16s infinite 8s;
+}
+
+.rightlogin img:nth-child(4) {
+  animation: slideAnimation 16s infinite 12s;
+}
+
+
+@media screen and (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y:visible;
+  }
+
+  .leftlogin, .rightlogin {
+    width: 100%;
+    margin-bottom: 20px;
+    /* box-sizing: border-box; */
+  }
+
+  .login-form .input-group {
+    width: 100%;
+  }
+
+  .login-logo {
+    width: 50%;
+    height: auto;
+  }
+
+  .avatar-options{
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .leftlogin h1 {
+    font-size: 24px;
+  }
+
+  .login-form .input-group label {
+    font-size: 14px;
+  }
+
+  .login-form .input-group input {
+    font-size: 14px;
+  }
+
+  .avatar-options img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .rightlogin{
+    display: none;
+  } 
+  .login-container{
+    box-sizing: border-box;
+  }
+}
+
+.register-container{
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+
