@@ -96,7 +96,7 @@ function SignUpForm() {
         />
         <div className="avatar-selection">
             <p>Select an Avatar:</p>
-            {/* <div className="avatar-options">
+            <div className="avatar-options">
               {avatars.map((avatar, index) => (
                 <img
                   key={index}
@@ -106,9 +106,9 @@ function SignUpForm() {
                   onClick={() => handleAvatarSelect(avatar)}
                 />
               ))}
-            </div> */}
+            </div>
           </div>
-        <button className="create-btn">Sign Up</button>
+        <button className="ghost1">Sign Up</button>
       </form>
     </div>
   );

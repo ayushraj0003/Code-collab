@@ -60,7 +60,7 @@ function SignInForm() {
           onChange={handleChange}
         />
         <a href="#">Forgot your password?</a>
-        <button className="create-btn">Sign In</button>
+        <button className="ghost1">Sign In</button>
       </form>
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./newstyles.css"; // Ensure the updated CSS file is imported
 import SignInForm from "./SignInForm";
 import SignUpForm from "./SignUpForm";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function App() {
   const [type, setType] = useState("signIn");

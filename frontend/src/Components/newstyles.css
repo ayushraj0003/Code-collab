@@ -44,7 +44,7 @@
   font-weight: 100;
   line-height: 20px;
   letter-spacing: 0.5px;
-  margin: 20px 0 30px;
+  margin:6px 0 10px;
 }
 
 .auth-container span {
@@ -112,7 +112,7 @@
   overflow: hidden;
   width: 768px;
   max-width: 100%;
-  min-height: 480px;
+  min-height: 620px;
 }
 
 .form-containers {
@@ -228,7 +228,7 @@
 }
 
 .social-container {
-  margin: 20px 0;
+  margin: 5px 0;
 }
 
 .social-container a {
@@ -292,4 +292,74 @@ footer a {
   box-shadow: inset 300px 0 0 0 black;
   cursor: pointer;
   color: yellow;
+}
+
+
+.ghost1{
+  background-color: red;
+  color: white;
+  
+  border: none;
+  cursor: pointer;
+  width: 90px; /* Full width on smaller screens */
+  height: auto;
+  border-radius: 20px;
+  text-align: center;
+  font-weight: bold;
+  max-width: 600px; /* Limit width on larger screens */
+  line-height: 50px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 0 black;
+  transition: ease-out 0.5s;
+  outline: none;
+}
+
+.ghost1:hover {
+  box-shadow: inset 300px 0 0 0 black;
+  cursor: pointer;
+  color: yellow;
+}
+
+.ghost{
+  border-radius: 20px;
+  border: 1px solid #ff4b2b;
+  background-color: #ff4b2b;
+  cursor: pointer ;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 12px 45px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  outline:none ;
+
+  z-index: 1;
+  transition: ease-out 0.8s;
+  position: relative;
+} 
+.ghost:hover{
+  color: black ;
+  cursor: pointer;
+}
+.ghost::before{
+  transition: 0.5s all ease;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  right: 50%;
+  bottom: 0;
+  opacity: 0;
+  content: "";
+  background-color: white;
+  border-radius: 20px;
+}
+.ghost:hover::before{
+  transition: 0.5s all ease;
+  left: 0;
+  right: 0;
+  opacity: 1;
+  z-index: -1;
+  border-radius: 20px;
 }
