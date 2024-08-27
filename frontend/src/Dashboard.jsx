@@ -17,6 +17,7 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState(''); 
   const [filteredRooms, setFilteredRooms] = useState([]); 
   const [roomBackgroundImages, setRoomBackgroundImages] = useState({}); 
+  const [isModalOpen, setIsModalOpen] = useState(false);  
 
   const navigate = useNavigate();
   const backgroundImages = [
@@ -148,7 +149,11 @@ function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login'); // Redirect to the login page
+    navigate('/'); // Redirect to the login page
+  };
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
   };
 
   return (
@@ -161,7 +166,12 @@ function Dashboard() {
           ) : (
             userDetails && (
               <div>
-                <img src={userDetails.avatar} alt="User Avatar" className="user-avatar" />
+                <img
+                  src={userDetails.avatar}
+                  alt="User Avatar"
+                  className="user-avatar"
+                  onClick={toggleModal}
+                />
                 <p className="dashboard-welcome">{userDetails.name}</p>
               </div>
             )
@@ -263,6 +273,21 @@ function Dashboard() {
           </div>
         </div>
       </div>
+      {isModalOpen && (
+        <div className="modal">
+          
+          <div className="modal-content">
+            <span className="close" onClick={toggleModal}>&times;</span>
+            <h2>User Details</h2>
+            {userDetails && (
+              <>
+                <p><strong>Name:</strong> {userDetails.name}</p>
+                <p><strong>Mobile:</strong> {userDetails.mobile}</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

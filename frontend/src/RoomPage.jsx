@@ -20,6 +20,7 @@ function RoomPage() {
   const [authorName, setAuthorName] = useState(null); 
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState('');
+  const [userDetails, setUserDetails] = useState(null);
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -28,7 +29,15 @@ function RoomPage() {
         const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        const userResponse = await axios.get('http://localhost:5000/api/auth/details', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserDetails(userResponse.data);
+        console.log(userResponse.data);
+
         setRoom(response.data);
+        console.log(response.data);
         setFiles(response.data.files || []);
         setFolders(response.data.folders || []); 
       } catch (err) {
@@ -209,7 +218,7 @@ function RoomPage() {
     <div className="room-container">
       <div className="profile-container">
         <div className="room-sidebar">
-          <img src="/images/logo2.png" alt="Logo" className="dash-logo" />
+          <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
           <h1>{room.roomName}</h1>
           <h3>Members:</h3>
           {room.users && room.users.length > 0 ? (
@@ -217,7 +226,10 @@ function RoomPage() {
               {room.users.map((user) => (
                 <p key={user._id}>
                   <img src={user.avatar} alt={user.name} className="member-avatar" />
-                  {user.name}
+                  <div className='user-name'>{user.name}</div>
+                  {user._id === room.userId && (
+                    <span className="owner-badge"> Owner</span>
+                  )}
                 </p>
               ))}
             </ul>

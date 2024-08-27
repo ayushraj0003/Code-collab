@@ -112,7 +112,7 @@
   overflow: hidden;
   width: 768px;
   max-width: 100%;
-  min-height: 620px;
+  min-height: 580px;
 }
 
 .form-containers {
@@ -231,7 +231,13 @@
   margin: 5px 0;
 }
 
-.social-container a {
+.social-containers{
+  margin: 10px 0;
+}
+
+.social-container a,
+.social-containers a
+  {
   border: 1px solid #dddddd;
   border-radius: 50%;
   display: inline-flex;
@@ -362,4 +368,29 @@ footer a {
   opacity: 1;
   z-index: -1;
   border-radius: 20px;
+}
+
+
+.avatar-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  border: 2px solid transparent; /* Default border */
+}
+
+.avatar.selected {
+  border-color: black; /* Green border to indicate selection */
+  transform: scale(1.1); /* Slightly enlarge the selected avatar */
+}
+
+.avatar:hover {
+  transform: scale(1.35); /* Slight enlargement on hover */
 }

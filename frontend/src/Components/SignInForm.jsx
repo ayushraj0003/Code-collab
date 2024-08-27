@@ -33,7 +33,7 @@ function SignInForm() {
     <div className="form-containers sign-in-container">
       <form onSubmit={handleSubmit}>
         <h1>Sign in</h1>
-        <div className="social-container">
+        <div className="social-containers">
           <a href="#" className="social">
             <i className="fab fa-facebook-f" />
           </a>
