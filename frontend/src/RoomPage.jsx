@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
+import Loader from './Loader'; // Import the Loader component
 import './styles.css';
 import './design.css';
 
@@ -15,12 +16,15 @@ function RoomPage() {
   const [error, setError] = useState(null);
   const [code, setCode] = useState('// Write your code here...');
   const [files, setFiles] = useState([]);
-  const [folders, setFolders] = useState([]); 
+  const [folders, setFolders] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [authorName, setAuthorName] = useState(null); 
-  const navigate = useNavigate();
+  const [authorName, setAuthorName] = useState(null);
   const [repoUrl, setRepoUrl] = useState('');
   const [userDetails, setUserDetails] = useState(null);
+  const [loading, setLoading] = useState(true); // State for loading
+  const [isModalOpen, setIsModalOpen] = useState(false);  
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -34,14 +38,13 @@ function RoomPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserDetails(userResponse.data);
-        console.log(userResponse.data);
-
         setRoom(response.data);
-        console.log(response.data);
         setFiles(response.data.files || []);
-        setFolders(response.data.folders || []); 
+        setFolders(response.data.folders || []);
       } catch (err) {
         setError(err.message);
+      } finally {
+        setLoading(false); // Stop loading once data is fetched
       }
     };
 
@@ -67,7 +70,7 @@ function RoomPage() {
       alert('Please select a file to commit changes.');
       return;
     }
-  
+
     try {
       const token = localStorage.getItem('token');
       if (selectedFile.folderPath) {
@@ -88,12 +91,13 @@ function RoomPage() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
-  
+
       alert('Code committed successfully!');
     } catch (err) {
       setError(err.message);
     }
   };
+
   const handleRepoUrlSubmit = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -102,8 +106,7 @@ function RoomPage() {
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
-      // Update the files and folders in the room with the new ones from GitHub
+
       setFiles(response.data.files);
       setFolders(response.data.folders);
       alert('Files uploaded successfully from GitHub repository!');
@@ -111,6 +114,7 @@ function RoomPage() {
       alert('Failed to upload files from GitHub repository.');
     }
   };
+
   const handleFileClick = async (file) => {
     setSelectedFile(file);
 
@@ -147,11 +151,11 @@ function RoomPage() {
       ...file,
       folderPath: folderPath.startsWith('/') ? folderPath : `/${folderPath}`,
     });
-    
+
     try {
       const token = localStorage.getItem('token');
       const cleanedFolderPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath;
-  
+
       const response = await axios.get(
         `http://localhost:5000/api/rooms/${roomId}/folder-file`,
         {
@@ -159,13 +163,13 @@ function RoomPage() {
           params: { folderPath: cleanedFolderPath, filename: file.filename },
         }
       );
-      
+
       setCode(response.data.content);
-  
+
       const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       setAuthorName(authorResponse.data.name);
     } catch (err) {
       setError('Failed to fetch the latest file version.');
@@ -210,9 +214,17 @@ function RoomPage() {
     return <p>Error: {error}</p>;
   }
 
+  if (loading) {
+    return <Loader />; // Show loader while fetching data
+  }
+
   if (!room) {
     return <p>Loading room data...</p>;
   }
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
 
   return (
     <div className="room-container">
@@ -241,6 +253,37 @@ function RoomPage() {
 
       <div className="main-content">
         <div className="room-content">
+          <div className="user-avatar-room">
+          {error ? (
+            <p className="error">Error: {error}</p>
+          ) : (
+            userDetails && (
+              <div>
+                <img
+                  src={userDetails.avatar}
+                  alt="User Avatar"
+                  className="user-avatar-logo"
+                  onClick={toggleModal}
+                />
+              </div>
+            )
+          )}
+            {isModalOpen && (
+        <div className="modal">
+          
+          <div className="modal-content">
+            <span className="close" onClick={toggleModal}>&times;</span>
+            <h2>User Details</h2>
+            {userDetails && (
+              <>
+                <p><strong>Name:</strong> {userDetails.name}</p>
+                <p><strong>Mobile:</strong> {userDetails.mobile}</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+          </div>
           <h2>Files in this Room:</h2>
           {files.length > 0 ? (
             <ul>
@@ -266,15 +309,15 @@ function RoomPage() {
           <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p>
           <button onClick={handleVideoCall}>Start Video Call</button>
           <div className="github-repo-upload">
-  <h2>Upload Files from GitHub</h2>
-  <input 
-    type="text" 
-    placeholder="Enter GitHub repo URL" 
-    value={repoUrl} 
-    onChange={(e) => setRepoUrl(e.target.value)} 
-  />
-  <button onClick={handleRepoUrlSubmit}>Upload from GitHub</button>
-</div>
+            <h2>Upload Files from GitHub</h2>
+            <input 
+              type="text" 
+              placeholder="Enter GitHub repo URL" 
+              value={repoUrl} 
+              onChange={(e) => setRepoUrl(e.target.value)} 
+            />
+            <button onClick={handleRepoUrlSubmit}>Upload from GitHub</button>
+          </div>
         </div>
       </div>
     </div>
