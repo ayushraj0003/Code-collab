@@ -728,23 +728,32 @@ input {
 }
 
 
-.logout-btn {
+.logout-btn , .profile-selections span{
   display: flex;
   align-items: center;
-  background-color: #ff4b4b;
   color: white;
   border: none;
   padding: 10px 15px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
-  margin-top: 20px;
   transition: background-color 0.3s ease;
+  transition: transform 0.7s ease;
   justify-self: flex-end;
+}
+
+.logout-btn{
+  background-color: #ff4b4b;
+  /* transition: transform 0.7s ease; */
+}
+
+.profile-selections span{
+  background-color: #0477f3;
 }
 
 .logout-btn:hover {
   background-color: #e04444;
+  transform: scale(1.13);
 }
 
 .logout-btn .fa-sign-out-alt {
@@ -912,13 +921,6 @@ input {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
-  position: relative;
-}
 
 .modal-content h2 {
   margin-top: 0;
@@ -1000,4 +1002,58 @@ input {
 .user-avatar-logo{
   height: 70px;
   width: 70px;
+}
+
+.user-menu {
+  position: relative;
+  display: inline-block;
+}
+
+
+.profile-options {
+  position: absolute;
+  right: 0;
+  top:80%;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  z-index: 1000;
+  border-radius: 4px;
+}
+
+.profile-selections {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.profile-selections span
+ {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-selections span:hover{
+  background-color: #0a06e4;
+  transform: scale(1.13);
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+
+.close:hover {
+  color: red;
+  transform: scale(2.3);
 }

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FaSignOutAlt } from 'react-icons/fa';
 import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
@@ -23,6 +24,9 @@ function RoomPage() {
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true); // State for loading
   const [isModalOpen, setIsModalOpen] = useState(false);  
+  const [openProfile, setOpenProfile] = useState(false);
+  const dropdownRef = useRef(null);
+  const avatarRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -54,9 +58,23 @@ function RoomPage() {
     socket.on('codeUpdate', (updatedCode) => {
       setCode(updatedCode);
     });
+    const handleClickOutside = (event) => {
+      // Check if the click is outside the dropdown and the avatar
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        avatarRef.current &&
+        !avatarRef.current.contains(event.target)
+      ) {
+        setOpenProfile(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+  
 
     return () => {
       socket.emit('leaveRoom', roomId);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [roomId]);
 
@@ -249,8 +267,19 @@ function RoomPage() {
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
+    setOpenProfile(false); // Close the dropdown when the modal opens
   };
 
+  const toggleProfile = () =>{
+    setOpenProfile(!openProfile);
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/'); // Redirect to the login page
+  };
+
+  
   return (
     <div className="room-container">
       <div className="profile-container">
@@ -283,26 +312,43 @@ function RoomPage() {
             <p className="error">Error: {error}</p>
           ) : (
             userDetails && (
-              <div>
                 <img
                   src={userDetails.avatar}
                   alt="User Avatar"
                   className="user-avatar-logo"
-                  onClick={toggleModal}
+                  onClick={toggleProfile}
+                  ref={avatarRef}
                 />
-              </div>
             )
           )}
-            {isModalOpen && (
+         {openProfile && (
+        <div className="profile-options" ref={dropdownRef}>
+          <div className="profile-selections">
+            <span onClick={toggleModal}>Profile</span>
+            <button onClick={handleLogout} className="logout-btn">
+              <FaSignOutAlt /> Logout
+            </button>
+          </div>
+        </div>
+      )}
+      {isModalOpen && (
         <div className="modal">
-          
           <div className="modal-content">
-            <span className="close" onClick={toggleModal}>&times;</span>
+            <span className="close" onClick={toggleModal}>
+              &times;
+            </span>
             <h2>User Details</h2>
             {userDetails && (
               <>
-                <p><strong>Name:</strong> {userDetails.name}</p>
-                <p><strong>Mobile:</strong> {userDetails.mobile}</p>
+                <p>
+                  <strong>Name:</strong> {userDetails.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {userDetails.email}
+                </p>
+                <p>
+                  <strong>Mobile:</strong> {userDetails.mobile}
+                </p>
               </>
             )}
           </div>
