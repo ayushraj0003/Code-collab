@@ -4,7 +4,7 @@ const Room = require('../models/Room');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const axios=require('axios')
-
+const mongoose = require('mongoose'); 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -512,6 +512,32 @@ router.post('/:roomId/github-upload', async (req, res) => {
     res.status(500).json({ message: 'Failed to upload files from GitHub repository.' });
   }
 });
+// router.delete('/delete/:roomId', verifyToken, async (req, res) => {
+//   try {
+//       const { roomId } = req.params;
+//       const ID = req.user.userId;  
+
+//       console.log("Received roomId:", roomId);
+//       console.log("User ID from token:", ID);  // Corrected to use 'ID'
+
+//       const room = await Room.findById(roomId);
+
+//       if (!room) {
+//           return res.status(404).json({ message: 'Room not found' });
+//       }
+
+//       if (room.userId.toString() !== ID) {
+//           return res.status(403).json({ message: 'You are not authorized to delete this room' });
+//       }
+
+//       await room.remove();
+
+//       res.json({ message: 'Room deleted successfully' });
+//   } catch (err) {
+//       console.error("Server error:", err.message);
+//       res.status(500).send('Server Error');
+//   }
+// });
 
 
 
