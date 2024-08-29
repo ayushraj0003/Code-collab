@@ -84,7 +84,7 @@ socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
       socket.off('codeUpdate');
     };
 
-  }, [roomId]);
+  }, [roomId],[files],[folders]);
   // const handleDeleteRoom = async () => {
   //   if (window.confirm('Are you sure you want to delete this room?')) {
   //     try {
