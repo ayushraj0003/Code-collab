@@ -317,19 +317,22 @@ const handleLogout = () => {
                 <h1>{room.roomName}</h1>
                 <h3>Members:</h3>
                 {room.users && room.users.length > 0 ? (
-                    <ul>
-                        {room.users.map((user) => (
-                            <p key={user._id}>
-                                <img src={user.avatar} alt={user.name} className="member-avatar" />
-                                <div className='user-name'>{user.name}</div>
-                                {user._id === room.userId && (
-                                    <span className="owner-badge"> Owner</span>
-                                )}
-                            </p>
-                        ))}
-                    </ul>
+                  <ul>
+                    {room.users.map((user) => (
+                      <li key={user._id} className="member-item">
+                        <img src={user.avatar} alt={user.name} className="member-avatar" />
+                        <div className="user-name">{user.name}</div>
+                        {onlineUsers.includes(user._id) && (
+                          <span className="online-indicator"></span> // Green indicator for online status
+                        )}
+                        {user._id === room.userId && (
+                          <span className="owner-badge"> Owner</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
-                    <p>No users found.</p>
+                  <p>No users found.</p>
                 )}
                 {/* {userDetails && userDetails._id === room.userId && (
                     <button onClick={handleDeleteRoom} className="delete-room-btn">
@@ -405,21 +408,7 @@ const handleLogout = () => {
           <h2>Folder Structure:</h2>
           {folders.length > 0 ? renderFolders(folders) : <p>No folders available</p>}
         </div>
-        <h3>Online Users:</h3>
-        <ul className="online-users-list">
-  {onlineUsers.map((userId) => {
-    // Find the member in the room.users array using the user's ID
-    const member = room.users.find((user) => user._id === userId);
-    // Check if the member exists and render accordingly
-    return member ? (
-      <li key={userId}>
-        <img src={member.avatar || '/images/default-avatar.png'} alt="User Avatar" className="member-avatar" />
-        {member.name} <span className="online-indicator"></span> {/* Show online status */}
-      </li>
-    ) : null; // If the member is not found, render nothing
-  })}
-</ul>
-
+        
         <div className="room-right">
           <button onClick={handleCommitChanges}>Commit Changes</button>
 

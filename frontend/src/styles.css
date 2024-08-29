@@ -1057,3 +1057,38 @@ input {
   color: red;
   transform: scale(2.3);
 }
+
+
+/* Style for online indicator */
+.online-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: green; /* Green color for online status */
+  display: inline-block;
+  margin-left: 8px;
+}
+
+/* Style for member items */
+.member-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+/* .user-name {
+  font-size: 16px;
+  margin-right: 10px;
+} */
+
+/* .owner-badge {
+  font-weight: bold;
+  color: #ffcc00; 
+} */
