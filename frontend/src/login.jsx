@@ -32,7 +32,7 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
+    <div className="register-container">
     <div className="leftlogin">
       <div className="login-header">
         <img src="../public/images/logo.jpg" alt="Logo" className="login-logo" />

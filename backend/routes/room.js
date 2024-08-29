@@ -3,7 +3,8 @@ const crypto = require('crypto'); // Import crypto module
 const Room = require('../models/Room');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-
+const axios=require('axios')
+const mongoose = require('mongoose'); 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -224,6 +225,7 @@ router.post('/:roomId/upload-file', verifyToken, upload.single('file'), async (r
     room.files.push(newFile);
 
     console.log('After:', room.files); // Log after pushing
+    console.log("hi ");
 
     await room.save();
     console.log('Room saved successfully with files:', room.files);
@@ -240,8 +242,11 @@ router.get('/:roomId', verifyToken, async (req, res) => {
     
     // Find the room by its roomId
     const room = await Room.findOne({ roomId })
-      .populate('users', 'name') // Populating users to get their names
-      .populate('folders.files.owner', 'name'); // Populate file owners' names
+    .populate({
+      path: 'users',  // Populate users field
+      select: 'name avatar', // Select both name and avatar fields
+    })
+      .populate('folders.files.owner', 'name');// Populate file owners' names
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
@@ -304,44 +309,63 @@ router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async 
       return res.status(400).json({ message: 'Invalid folder structure' });
     }
 
-    // Add the folder structure and files to the room
-    const processFolder = (folderData, folderName) => {
-      if (folderData && Array.isArray(folderData.files)) {
-        const files = folderData.files.map((fileData) => ({
-          filename: fileData.name,
-          owner: req.user.userId,
-          codeHistory: [
-            {
-              code: req.files.find(f => f.originalname === fileData.name).buffer.toString('utf-8'),
-              author: req.user.userId,
-            },
-          ],
-        }));
+    const processFolder = (folderData, folderPath) => {
+      console.log(`Processing folder: ${folderPath}`);  // Log the current folder path
+
+      if (Array.isArray(folderData.files)) {
+        console.log(`Files in ${folderPath}:`, folderData.files.map(f => f.name));  // Log files in the current folder
+
+        // Process files within the current folder
+        const files = folderData.files.map((fileData) => {
+          const fileBuffer = req.files.find(f => f.originalname === fileData.name).buffer;
+
+          console.log(`Processing file: ${fileData.name}`);  // Log the current file being processed
+
+          return {
+            filename: fileData.name,
+            owner: req.user.userId,
+            codeHistory: [
+              {
+                code: fileBuffer.toString('utf-8'),
+                author: req.user.userId,
+              },
+            ],
+          };
+        });
 
         room.folders.push({
-          folderName: folderName,
-          path: folderName, // Store folder path
+          folderName: folderPath.split('/').pop(), // Extract folder name from path
+          path: folderPath, // Store full folder path
           files,
         });
-      } else {
-        // Recursively process subfolders
-        Object.keys(folderData).forEach(subFolder => {
-          processFolder(folderData[subFolder], `${folderName}/${subFolder}`);
-        });
       }
+
+      // Recursively process subfolders
+      Object.keys(folderData).forEach(subFolder => {
+        if (subFolder !== 'files') {
+          console.log(`Entering subfolder: ${subFolder}`);  // Log entering a subfolder
+          processFolder(folderData[subFolder], `${folderPath}/${subFolder}`);
+        }
+      });
     };
 
+    // Start processing from the root of the folder structure
     Object.keys(folderStructure).forEach((folder) => {
+      console.log(`Starting to process root folder: ${folder}`);  // Log the root folder
       processFolder(folderStructure[folder], folder);
     });
+
+    console.log('All folders and files processed successfully');  // Log after all processing is done
 
     await room.save();
     res.status(200).json({ message: 'Folder uploaded successfully' });
   } catch (err) {
-    console.error(err);
+    console.error('Error processing folder upload:', err);  // Log any errors that occur
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
 
 router.get('/:roomId/folder-file', verifyToken, async (req, res) => {
   try {
@@ -428,6 +452,89 @@ router.post('/:roomId/commit-folder-file', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+const extractRepoInfo = (repoUrl) => {
+  // Regular expression to match and capture owner and repo names
+  const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
+  const match = repoUrl.match(regex);
 
+  if (match && match.length === 3) {
+    const owner = match[1];
+    const repoName = match[2];
+    return { owner, repoName };
+  } else {
+    throw new Error('Invalid GitHub URL');
+  }
+};
+const getGitHubFiles = async (repoUrl) => {
+  const { owner, repoName } = extractRepoInfo(repoUrl);
+  console.log(repoUrl)
+  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/contents`;
+
+  try {
+    const response = await axios.get(apiUrl);
+    return response.data;
+  } catch (err) {
+    throw new Error(`Failed to fetch files from GitHub: ${err.message}`);
+  }
+};
+
+router.post('/:roomId/github-upload', async (req, res) => {
+  const { repoUrl } = req.body;
+  const { roomId } = req.params;
+
+  try {
+    const files = await getGitHubFiles(repoUrl);
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+
+    for (const file of files) {
+      if (file.type === 'file') {
+        const fileContent = Buffer.from(file.content, 'base64').toString('utf-8');
+
+        room.files.push({
+          filename: file.name,
+          owner: req.user._id, // Assuming the requesting user is the owner
+          codeHistory: [{
+            code: fileContent,
+            author: req.user._id, // Assuming the requesting user is the author
+          }],
+        });
+      }
+    }
+
+    await room.save();
+    res.status(200).json({ files: room.files, folders: room.folders });
+  } catch (err) {
+    console.error(`Error uploading files: ${err.message}`);
+    res.status(500).json({ message: 'Failed to upload files from GitHub repository.' });
+  }
+});
+
+router.delete('/delete/:roomId', verifyToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user.userId;
+
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Check if the current user is the owner of the room
+    if (room.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'You are not authorized to delete this room' });
+    }
+
+    await Room.deleteOne({ roomId });
+
+    res.json({ message: 'Room deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete room', error: err.message });
+  }
+}); 
 
 module.exports = router;

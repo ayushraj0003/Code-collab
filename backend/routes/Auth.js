@@ -37,7 +37,7 @@ router.post('/register', async (req, res) => {
       await user.save();
 
       const payload = { userId: user.id };
-      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
 
       res.status(201).json({ token });
   } catch (err) {
@@ -61,7 +61,7 @@ router.post('/login', async (req, res) => {
         }
 
         const payload = { userId: user.id };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(payload, process.env.JWT_SECRET);
 
         res.json({ token });
     } catch (err) {

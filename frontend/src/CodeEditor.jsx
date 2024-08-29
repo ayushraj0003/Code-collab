@@ -77,7 +77,6 @@ const CodeEditor = ({ code, onCodeChange, roomId }) => {
       />
 
       <div className="typing-indicators">
-        <p>jhsadsa</p>
         {Object.keys(typingUsers).map((lineNumber) => (
           <div key={lineNumber}>
             <p>{typingUsers[lineNumber]} is typing on line {lineNumber}</p>

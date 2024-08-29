@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http'); // Import the HTTP module
 const { Server } = require('socket.io'); // Import Socket.io
+const jwt = require('jsonwebtoken');
+const Room = require('./models/Room'); 
 
 require('dotenv').config();
 
@@ -35,13 +37,42 @@ const io = new Server(server, {
     methods: ['GET', 'POST']
   }
 });
-
+const onlineUsers = new Set();
 // Set up Socket.io for real-time collaboration
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('joinRoom', (roomId) => {
-    socket.join(roomId);
+  socket.on('joinRoom', async ({ roomId, token }) => {
+    try {
+      // Verify the user's token to get the user ID
+      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
+      const userId = decoded.userId; // Adjust based on your token's payload
+
+      // Fetch the room to verify membership
+      const room = await Room.findOne({ roomId }).populate('users');
+
+      if (!room) {
+        socket.emit('error', 'Room not found');
+        return;
+      }
+
+      // Check if the user is a member of the room
+      const isMember = room.users.some((user) => user._id.toString() === userId);
+
+      if (isMember) {
+        // Add the user to the online users set and join the room
+        onlineUsers.add(userId);
+        socket.join(roomId);
+
+        // Emit the updated list of online users to the room
+        io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
+      } else {
+        socket.emit('error', 'You are not a member of this room');
+      }
+    } catch (error) {
+      console.error('Error joining room:', error);
+      socket.emit('error', 'Invalid token or server error');
+    }
   });
 
   socket.on('offer', ({ offer, roomId }) => {
@@ -59,18 +90,45 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('codeUpdate', code);
   });
 
-  socket.on('leaveRoom', (roomId) => {
-    socket.leave(roomId);
+  socket.on('leaveRoom', async ({ roomId, token }) => {
+    try {
+      // Verify the user's token to get the user ID
+      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
+      const userId = decoded.userId; // Adjust based on your token's payload
+
+      // Remove the user from the onlineUsers set
+      onlineUsers.delete(userId);
+
+      // Leave the room and emit the updated list of online users to the room
+      socket.leave(roomId);
+      io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
+    } catch (error) {
+      console.error('Error leaving room:', error);
+      socket.emit('error', 'Invalid token or server error');
+    }
   });
 
+  socket.on('logout', async ({ roomId, token }) => {
+    try {
+      // Verify the user's token to get the user ID
+      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
+      const userId = decoded.userId; // Adjust based on your token's payload
+
+      // Remove the user from the onlineUsers set
+      onlineUsers.delete(userId);
+
+      // Leave the room and emit the updated list of online users to the room
+      socket.leave(roomId);
+      io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
+    } catch (error) {
+      console.error('Error leaving room:', error);
+      socket.emit('error', 'Invalid token or server error');
+    }
+  });
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
-  socket.on('typing', ({ roomId, lineNumber, username }) => {
-    console.log(`Typing event received for room ${roomId}, line ${lineNumber} by ${username}`);
-    socket.to(roomId).emit('userTyping', { lineNumber, username });
-  });
-});
+})
 
 // Start Server
 const PORT = process.env.PORT || 5000;
