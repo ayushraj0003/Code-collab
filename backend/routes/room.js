@@ -225,6 +225,7 @@ router.post('/:roomId/upload-file', verifyToken, upload.single('file'), async (r
     room.files.push(newFile);
 
     console.log('After:', room.files); // Log after pushing
+    console.log("hi ");
 
     await room.save();
     console.log('Room saved successfully with files:', room.files);
@@ -308,44 +309,63 @@ router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async 
       return res.status(400).json({ message: 'Invalid folder structure' });
     }
 
-    // Add the folder structure and files to the room
-    const processFolder = (folderData, folderName) => {
-      if (folderData && Array.isArray(folderData.files)) {
-        const files = folderData.files.map((fileData) => ({
-          filename: fileData.name,
-          owner: req.user.userId,
-          codeHistory: [
-            {
-              code: req.files.find(f => f.originalname === fileData.name).buffer.toString('utf-8'),
-              author: req.user.userId,
-            },
-          ],
-        }));
+    const processFolder = (folderData, folderPath) => {
+      console.log(`Processing folder: ${folderPath}`);  // Log the current folder path
+
+      if (Array.isArray(folderData.files)) {
+        console.log(`Files in ${folderPath}:`, folderData.files.map(f => f.name));  // Log files in the current folder
+
+        // Process files within the current folder
+        const files = folderData.files.map((fileData) => {
+          const fileBuffer = req.files.find(f => f.originalname === fileData.name).buffer;
+
+          console.log(`Processing file: ${fileData.name}`);  // Log the current file being processed
+
+          return {
+            filename: fileData.name,
+            owner: req.user.userId,
+            codeHistory: [
+              {
+                code: fileBuffer.toString('utf-8'),
+                author: req.user.userId,
+              },
+            ],
+          };
+        });
 
         room.folders.push({
-          folderName: folderName,
-          path: folderName, // Store folder path
+          folderName: folderPath.split('/').pop(), // Extract folder name from path
+          path: folderPath, // Store full folder path
           files,
         });
-      } else {
-        // Recursively process subfolders
-        Object.keys(folderData).forEach(subFolder => {
-          processFolder(folderData[subFolder], `${folderName}/${subFolder}`);
-        });
       }
+
+      // Recursively process subfolders
+      Object.keys(folderData).forEach(subFolder => {
+        if (subFolder !== 'files') {
+          console.log(`Entering subfolder: ${subFolder}`);  // Log entering a subfolder
+          processFolder(folderData[subFolder], `${folderPath}/${subFolder}`);
+        }
+      });
     };
 
+    // Start processing from the root of the folder structure
     Object.keys(folderStructure).forEach((folder) => {
+      console.log(`Starting to process root folder: ${folder}`);  // Log the root folder
       processFolder(folderStructure[folder], folder);
     });
+
+    console.log('All folders and files processed successfully');  // Log after all processing is done
 
     await room.save();
     res.status(200).json({ message: 'Folder uploaded successfully' });
   } catch (err) {
-    console.error(err);
+    console.error('Error processing folder upload:', err);  // Log any errors that occur
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
 
 router.get('/:roomId/folder-file', verifyToken, async (req, res) => {
   try {

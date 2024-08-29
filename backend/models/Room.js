@@ -1,5 +1,27 @@
 const mongoose = require('mongoose');
 
+const FileSchema = new mongoose.Schema({
+  filename: String,
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  codeHistory: [
+    {
+      code: String,
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+      author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    },
+  ],
+});
+
+const FolderSchema = new mongoose.Schema({
+  folderName: String,
+  path: String, // Store the full path of the folder
+  files: [FileSchema], // Files directly within this folder
+  subfolders: [this], // Recursive reference to subfolders
+});
+
 const RoomSchema = new mongoose.Schema({
   roomId: {
     type: String,
@@ -21,44 +43,8 @@ const RoomSchema = new mongoose.Schema({
       ref: 'User',
     },
   ],
-  files: [
-    {
-      filename: String,
-      owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      codeHistory: [
-        {
-          code: String,
-          timestamp: {
-            type: Date,
-            default: Date.now,
-          },
-          author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        },
-      ],
-    },
-  ],
-  folders: [
-    {
-      folderName: String,
-      path: String, // Store the full path of the folder/file
-      files: [
-        {
-          filename: String,
-          owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-          codeHistory: [
-            {
-              code: String,
-              timestamp: {
-                type: Date,
-                default: Date.now,
-              },
-              author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-            },
-          ],
-        },
-      ],
-    },
-  ],
+  files: [FileSchema], // Files directly in the room (not in any folder)
+  folders: [FolderSchema], // Top-level folders in the room
 });
 
 module.exports = mongoose.model('Room', RoomSchema);

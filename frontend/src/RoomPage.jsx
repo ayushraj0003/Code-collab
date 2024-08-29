@@ -180,35 +180,60 @@ function RoomPage() {
     navigate(`/room/${roomId}/video-call`);
   };
 
-  const renderFolders = (folderData, path = '') => {
-    return (
-      <ul>
-        {folderData && folderData.length > 0 ? (
-          folderData.map((folder, index) => (
+  const renderFolders = (folders) => {
+    const buildFolderTree = (folders) => {
+      const tree = {};
+  
+      folders.forEach((folder) => {
+        const parts = folder.path.split('/').filter(Boolean); // Split path into parts
+        let current = tree;
+  
+        parts.forEach((part, index) => {
+          if (!current[part]) {
+            current[part] = { files: [], subfolders: {} };
+          }
+  
+          if (index === parts.length - 1) {
+            current[part].files = folder.files; // Assign files to the last part of the path
+          }
+  
+          current = current[part].subfolders; // Move to the next subfolder level
+        });
+      });
+  
+      return tree;
+    };
+  
+    const renderTree = (node, path = '') => {
+      return (
+        <ul>
+          {Object.keys(node).map((folderName, index) => (
             <li key={index}>
-              <span onClick={() => handleFolderClick(index)}>
+              <span onClick={() => handleFolderClick(folderName)}>
                 <img src="/images/folder.png" alt="Folder" className="folder-icon" />
-                <strong>{folder.folderName}</strong>
+                <strong>{folderName}</strong>
               </span>
-              {folder.isOpen && folder.files && folder.files.length > 0 && (
+              {node[folderName].files.length > 0 && (
                 <ul>
-                  {folder.files.map((file, fileIndex) => (
-                    <li key={fileIndex} onClick={() => handleFileInFolderClick(file, `${path}/${folder.folderName}`)}>
+                  {node[folderName].files.map((file, fileIndex) => (
+                    <li key={fileIndex} onClick={() => handleFileInFolderClick(file, `${path}/${folderName}`)}>
                       <img src="/images/file.png" alt="File" className="folder-icon" />
                       {file.filename}
                     </li>
                   ))}
                 </ul>
               )}
-              {folder.isOpen && folder.subfolders && renderFolders(folder.subfolders, `${path}/${folder.folderName}`)}
+              {renderTree(node[folderName].subfolders, `${path}/${folderName}`)}
             </li>
-          ))
-        ) : (
-          <p>No folders available</p>
-        )}
-      </ul>
-    );
+          ))}
+        </ul>
+      );
+    };
+  
+    const folderTree = buildFolderTree(folders);
+    return renderTree(folderTree);
   };
+  
 
   if (error) {
     return <p>Error: {error}</p>;
@@ -298,7 +323,7 @@ function RoomPage() {
             <p>No files found.</p>
           )}
           <h2>Folder Structure:</h2>
-          {renderFolders(folders)}
+          {folders.length > 0 ? renderFolders(folders) : <p>No folders available</p>}
         </div>
 
         <div className="room-right">
