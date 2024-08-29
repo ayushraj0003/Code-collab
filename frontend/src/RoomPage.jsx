@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSignOutAlt } from 'react-icons/fa';
+import { FaSignOutAlt, FaTrashAlt } from 'react-icons/fa';
 import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
@@ -308,6 +308,21 @@ const handleLogout = () => {
     navigate('/');
   };
 
+  const handleDeleteRoom = async () => {
+    if (window.confirm('Are you sure you want to delete this room?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`http://localhost:5000/api/rooms/delete/${roomId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        alert('Room deleted successfully');
+        navigate('/dashboard'); // Redirect to the home or another page after deletion
+      } catch (err) {
+        alert('Failed to delete the room');
+      }
+    }
+  };
   
   return (
     <div className="room-container">
@@ -334,11 +349,11 @@ const handleLogout = () => {
                 ) : (
                   <p>No users found.</p>
                 )}
-                {/* {userDetails && userDetails._id === room.userId && (
-                    <button onClick={handleDeleteRoom} className="delete-room-btn">
-                        Delete Room
-                    </button>
-                )} */}
+              {room.userId === userDetails?._id && ( 
+              <button className="header-button" onClick={handleDeleteRoom}>
+                <FaTrashAlt /> Delete Room
+              </button>
+            )}
             </div>
         </div>
 
