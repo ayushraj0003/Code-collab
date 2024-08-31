@@ -744,11 +744,28 @@ input {
 
 .logout-btn{
   background-color: #ff4b4b;
-  /* transition: transform 0.7s ease; */
+}
+
+.header-button{
+  background-color: #e04444;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+  transition: transform 0.7s ease;
+}
+
+.header-button:hover{
+  background-color: red;
+  transform: scale(1.11);
 }
 
 .profile-selections span{
   background-color: #0477f3;
+  text-align: center;
 }
 
 .logout-btn:hover {
@@ -1081,14 +1098,10 @@ input {
   height: 40px;
   border-radius: 50%;
   margin-right: 10px;
+  transition: transform 0.3s ease;
 }
 
-/* .user-name {
-  font-size: 16px;
-  margin-right: 10px;
-} */
+.member-avatar:hover{
+  transform: scale(1.19);
+}
 
-/* .owner-badge {
-  font-weight: bold;
-  color: #ffcc00; 
-} */

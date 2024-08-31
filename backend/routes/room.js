@@ -537,4 +537,102 @@ router.delete('/delete/:roomId', verifyToken, async (req, res) => {
   }
 }); 
 
+// const checkRoomOwner = async (req, res, next) => {
+//   const { roomId } = req.params;
+//   const {userId} = req.params; 
+
+//   try {
+//     const room = await Room.findOne({ roomId });
+
+//     if (!room) {
+//       return res.status(404).json({ message: 'Room not found' });
+//     }
+
+//     if (!room.userId.equals(userId)) {
+//       return res.status(403).json({ message: 'You are not the owner of this room' });
+//     }
+
+//     req.room = room; // Pass the room object to the next middleware
+//     next();
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error });
+//   }
+// };
+
+
+// Example Node.js/Express authorization middleware
+const isRoomOwner = async (req, res, next) => {
+  const room = await Room.findById(req.params.roomId);
+  if (!room || room.userId !== req.user._id) {
+    return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+  }
+  next();
+};
+
+// Route to remove a user from a room
+// Example route in Express.js
+router.delete('/:roomId/remove-user/:removeId', verifyToken, async (req, res) => {
+  try {
+    const { roomId, removeId } = req.params;
+    console.log(roomId);
+    console.log(removeId);
+    // Ensure `userId` is a valid ObjectId
+    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
+    //   return res.status(400).json({ message: 'Invalid user ID format.' });
+    // }
+    const room = await Room.findOne({roomId});
+    
+    console.log("hello");
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+    
+    // Check if the user making the request is the owner
+    if (req.user.userId !== room.userId.toString()) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+    }
+    console.log("here");
+    // Remove the user from the room's users array
+    room.users = room.users.filter(user => user.toString() !== removeId); // Convert ObjectId to string for comparison
+    console.log("noew here");
+    await room.save();
+
+    res.json({ message: 'User removed successfully.' });
+  } catch (error) {
+    console.error('Error removing user from room:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+router.post('/:roomId/change-owner/:newOwnerId', verifyToken, async (req, res) => {
+  try {
+    const { roomId, newOwnerId } = req.params;
+
+    // Ensure `userId` is a valid ObjectId
+    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
+    //   return res.status(400).json({ message: 'Invalid user ID format.' });
+    // }
+    const room = await Room.findOne({roomId});
+    
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+    
+    // Check if the user making the request is the owner
+    if (req.user.userId !== room.userId.toString()) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to change the owner ' });
+    }
+   
+    // Remove the user from the room's users array
+    room.userId=newOwnerId; // Convert ObjectId to string for comparison
+
+    await room.save();
+
+    res.json({ message: 'User removed successfully.' });
+  } catch (error) {
+    console.error('Error removing user from room:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
 module.exports = router;

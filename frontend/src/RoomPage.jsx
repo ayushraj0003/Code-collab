@@ -6,6 +6,7 @@ import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
 import Loader from './Loader'; // Import the Loader component
+import ManageRoomUsers from './ManageRoomUsers';
 import './styles.css';
 import './design.css';
 
@@ -330,30 +331,8 @@ const handleLogout = () => {
             <div className="room-sidebar">
                 <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
                 <h1>{room.roomName}</h1>
-                <h3>Members:</h3>
-                {room.users && room.users.length > 0 ? (
-                  <ul>
-                    {room.users.map((user) => (
-                      <li key={user._id} className="member-item">
-                        <img src={user.avatar} alt={user.name} className="member-avatar" />
-                        <div className="user-name">{user.name}</div>
-                        {onlineUsers.includes(user._id) && (
-                          <span className="online-indicator"></span> // Green indicator for online status
-                        )}
-                        {user._id === room.userId && (
-                          <span className="owner-badge"> Owner</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No users found.</p>
-                )}
-              {room.userId === userDetails?._id && ( 
-              <button className="header-button" onClick={handleDeleteRoom}>
-                <FaTrashAlt /> Delete Room
-              </button>
-            )}
+                <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers} />
+              
             </div>
         </div>
 
@@ -380,6 +359,11 @@ const handleLogout = () => {
             <button onClick={handleLogout} className="logout-btn">
               <FaSignOutAlt /> Logout
             </button>
+            {room.userId === userDetails?._id && ( 
+              <button className="header-button" onClick={handleDeleteRoom}>
+                <FaTrashAlt /> Delete Room
+              </button>
+            )}
           </div>
         </div>
       )}
