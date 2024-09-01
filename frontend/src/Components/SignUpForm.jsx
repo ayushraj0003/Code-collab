@@ -1,6 +1,6 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
+
 function SignUpForm() {
   const [formData, setFormData] = useState({
     name: '',
@@ -9,6 +9,8 @@ function SignUpForm() {
     mobile: '',
     avatar: '',  // Add avatar to formData
   });
+  const [otp, setOtp] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false); // Track OTP verification status
 
   const avatars = [
     "/images/avatar1.jpg",
@@ -36,8 +38,38 @@ function SignUpForm() {
     });
   };
 
+  const handleSendOTP = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/send-otp', { email: formData.email });
+      alert(response.data.message);
+    } catch (error) {
+      console.error('Failed to send OTP', error);
+      alert('Failed to send OTP');
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', { email: formData.email, otp });
+      alert(response.data.message);
+      if (response.data.success) {
+        setOtpVerified(true); // Mark OTP as verified
+      }
+      if(setOtpVerified){
+        window.location.href="http://localhost:3000/dashboard"
+      }
+    } catch (error) {
+      console.error('Failed to verify OTP', error);
+      alert('Invalid OTP');
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!otpVerified) {
+      alert('Please verify OTP before registering.');
+      return;
+    }
     
     try {
       const response = await axios.post('http://localhost:5000/api/auth/register', formData);
@@ -88,27 +120,35 @@ function SignUpForm() {
           placeholder="Password"
         />
         <input
-              type="text"
-              placeholder="Enter your mobile number"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
+          type="text"
+          placeholder="Enter your mobile number"
+          name="mobile"
+          value={formData.mobile}
+          onChange={handleChange}
         />
         <div className="avatar-selection">
-            <p>Select an Avatar:</p>
-            <div className="avatar-options">
-              {avatars.map((avatar, index) => (
-                <img
-                  key={index}
-                  src={avatar}
-                  alt={`Avatar ${index + 1}`}
-                  className={`avatar ${formData.avatar === avatar ? 'selected' : ''}`}
-                  onClick={() => handleAvatarSelect(avatar)}
-                />
-              ))}
-            </div>
+          <p>Select an Avatar:</p>
+          <div className="avatar-options">
+            {avatars.map((avatar, index) => (
+              <img
+                key={index}
+                src={avatar}
+                alt={`Avatar ${index + 1}`}
+                className={`avatar ${formData.avatar === avatar ? 'selected' : ''}`}
+                onClick={() => handleAvatarSelect(avatar)}
+              />
+            ))}
           </div>
-        <button className="ghost1">Sign Up</button>
+        </div>
+        <button type="button" onClick={handleSendOTP}>Send OTP</button>
+        <input
+          type="text"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          placeholder="Enter OTP"
+        />
+        <button type="button" onClick={handleVerifyOTP}>Verify OTP</button>
+        <button type="submit" className="ghost1">Sign Up</button>
       </form>
     </div>
   );

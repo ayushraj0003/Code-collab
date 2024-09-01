@@ -2,6 +2,8 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto')
 require('dotenv').config();
 
 const router = express.Router();
@@ -28,6 +30,9 @@ router.post('/register', async (req, res) => {
   const { name, email, password, mobile, avatar } = req.body;
 
   try {
+    if (!otps[email]) {
+      return res.status(400).json({ error: 'OTP not verified or expired' });
+  }
       let user = await User.findOne({ email });
       if (user) {
           return res.status(400).json({ msg: 'User already exists' });
@@ -46,6 +51,53 @@ router.post('/register', async (req, res) => {
   }
 });
 // Login Route
+
+router.post('/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+
+  if (otps[email] && otps[email] === otp) {
+      delete otps[email]; // OTP is valid, remove it from temporary storage
+      res.status(200).json({ message: 'OTP verified successfully' });
+  } else {
+      res.status(400).json({ error: 'Invalid OTP' });
+  }
+});
+const otps = {}; // Store OTPs temporarily, you may use a database or cache for this in production
+
+router.post('/send-otp', async (req, res) => {
+    const { email } = req.body;
+    console.log(email)
+    // Generate OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    // Store OTP temporarily
+    otps[email] = otp;
+
+    // Send OTP via email using nodemailer
+    const transporter = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Your OTP Code',
+        text: `Your OTP code is ${otp}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error(error)
+            return res.status(500).json({ error: 'Failed to send OTP' });
+        } else {
+            res.status(200).json({ message: 'OTP sent successfully' });
+        }
+    });
+});
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
