@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function ManageRoomUsers({ roomId, onlineUsers }) {
   const [users, setUsers] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null); // State to hold the current user
-  const [activeMenuUserId, setActiveMenuUserId] = useState(null); // State to manage which user's menu is open
+  const [currentUser, setCurrentUser] = useState(null); 
+  const [activeMenuUserId, setActiveMenuUserId] = useState(null); 
+  const navigate = useNavigate(); 
 
   useEffect(() => {
-    // Fetch current user details
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -21,7 +22,6 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
       }
     };
 
-    // Fetch room details including users and owner
     const fetchRoomDetails = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -49,8 +49,15 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
       await axios.delete(`http://localhost:5000/api/rooms/${roomId}/remove-user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(users.filter(user => user._id !== userId)); // Update the UI
-      alert('User removed successfully');
+      
+      if (currentUser._id === userId) {
+        // Navigate the removed user to the dashboard
+        alert('You have been removed from the room');
+        navigate('/dashboard'); // Redirect to the dashboard
+      } else {
+        setUsers(users.filter(user => user._id !== userId)); // Update the UI
+        alert('User removed successfully');
+      }
     } catch (error) {
       console.error('Error removing user:', error);
       alert('Failed to remove user');
@@ -58,7 +65,7 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
   };
 
   const toggleMenu = (userId) => {
-    setActiveMenuUserId(prev => (prev === userId ? null : userId)); // Toggle menu
+    setActiveMenuUserId(prev => (prev === userId ? null : userId)); 
   };
 
   const handleChangeOwner = async (newOwnerId) => {
@@ -68,9 +75,7 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, {
-        
-      }, {
+      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOwnerId(newOwnerId);
@@ -91,7 +96,7 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
               <img src={user.avatar} alt={user.name} className="member-avatar" />
               <div className="user-name">{user.name}</div>
               {onlineUsers.includes(user._id) && (
-                <span className="online-indicator"></span> // Green indicator for online status
+                <span className="online-indicator"></span> 
               )}
               {user._id === ownerId && (
                 <span className="owner-badge"> Owner</span>
@@ -118,3 +123,4 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
 }
 
 export default ManageRoomUsers;
+ 

@@ -5,6 +5,7 @@ const http = require('http'); // Import the HTTP module
 const { Server } = require('socket.io'); // Import Socket.io
 const jwt = require('jsonwebtoken');
 const Room = require('./models/Room'); 
+const Chat=require("./models/Chat");
 
 require('dotenv').config();
 
@@ -13,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect(process.env.MONGO_URIS, {
     // useNewUrlParser: true,
     // useUnifiedTopology: true,
 })
@@ -26,6 +27,8 @@ app.use('/api/auth', authRoutes);
 
 const roomRoutes = require('./routes/room');
 app.use('/api/rooms', roomRoutes);
+const chatRoutes=require('./routes/chat');
+app.use('/api/chat',chatRoutes);
 
 // Create an HTTP server and attach Express app to it
 const server = http.createServer(app);

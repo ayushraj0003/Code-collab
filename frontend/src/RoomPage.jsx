@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaSignOutAlt, FaTrashAlt } from 'react-icons/fa';
 import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
@@ -190,6 +190,9 @@ socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
           : folder
       )
     );
+  };
+  const handleGroupChatRedirect = () => {
+    navigate(`/room/${roomId}/group-chat`);
   };
 
   const handleFileInFolderClick = async (file, folderPath = '') => {
@@ -424,6 +427,11 @@ const handleLogout = () => {
               onChange={(e) => setRepoUrl(e.target.value)} 
             />
             <button onClick={handleRepoUrlSubmit}>Upload from GitHub</button>
+            
+              
+            <button onClick={handleGroupChatRedirect}>
+          Go to Group Chat
+        </button>
           </div>
         </div>
       </div>

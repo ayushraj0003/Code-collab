@@ -10,6 +10,7 @@ const upload = multer({ storage: storage });
 
 const router = express.Router();
 
+
 function verifyToken(req, res, next) {
     const authHeader = req.header('Authorization');
     if (!authHeader) {
