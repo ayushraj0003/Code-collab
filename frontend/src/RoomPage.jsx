@@ -192,7 +192,7 @@ socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
     );
   };
   const handleGroupChatRedirect = () => {
-    navigate(`/room/${roomId}/group-chat`);
+    navigate(`/room/${roomId}/group-chat`, { state: { myArray: onlineUsers } });
   };
 
   const handleFileInFolderClick = async (file, folderPath = '') => {

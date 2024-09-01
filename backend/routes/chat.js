@@ -30,7 +30,8 @@ function verifyToken(req, res, next) {
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
-})
+});
+
 router.post('/:roomId', verifyToken, async (req, res) => {
     const { senderId, message } = req.body;
     const { roomId } = req.params;
