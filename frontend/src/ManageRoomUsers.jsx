@@ -86,13 +86,27 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
     }
   };
 
+  const handleUserClick = (roomId, userId) => {
+    if (currentUser && currentUser._id === userId) {
+      // If the current user clicks on their own avatar, do nothing
+      return;
+    }
+    
+    navigate(`/room/${roomId}/personal-chat`, { state: { roomId, userId } });
+  };
+  
+
   return (
-    <div>
-      <h3>Members:</h3>
+    <>
       {users && users.length > 0 ? (
         <ul>
           {users.map(user => (
-            <li key={user._id} className="member-item">
+            <li
+              key={user._id}
+              className="member-item"
+              onClick={() => handleUserClick(roomId, user._id)} // Add click handler
+              style={{ cursor: 'pointer' }} // Add cursor style to indicate it's clickable
+            >
               <img src={user.avatar} alt={user.name} className="member-avatar" />
               <div className="user-name">{user.name}</div>
               {onlineUsers.includes(user._id) && (
@@ -103,11 +117,20 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
               )}
               {currentUser && currentUser._id === ownerId && user._id !== ownerId && (
                 <>
-                  <button className="more-options" onClick={() => toggleMenu(user._id)}>...</button>
+                  <button className="more-options" onClick={(e) => {
+                    e.stopPropagation(); // Prevent event bubbling to the li click handler
+                    toggleMenu(user._id);
+                  }}>...</button>
                   {activeMenuUserId === user._id && (
                     <div className="options-menu">
-                      <button onClick={() => handleRemoveUser(user._id)}>Remove User</button>
-                      <button onClick={() => handleChangeOwner(user._id)}>Make Owner</button>
+                      <button onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveUser(user._id);
+                      }}>Remove User</button>
+                      <button onClick={(e) => {
+                        e.stopPropagation();
+                        handleChangeOwner(user._id);
+                      }}>Make Owner</button>
                     </div>
                   )}
                 </>
@@ -118,7 +141,7 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
       ) : (
         <p>No users found.</p>
       )}
-    </div>
+    </>
   );
 }
 

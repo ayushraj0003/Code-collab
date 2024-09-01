@@ -11,6 +11,10 @@ const ChatSchema = new mongoose.Schema({
         required: true,
         ref: 'User', // References the User model
     },
+    receiver: {
+        type:String,
+        ref: 'User',
+    },
     message: {
         type: String,
         required: true,
@@ -18,6 +22,11 @@ const ChatSchema = new mongoose.Schema({
     timestamp: {
         type: Date,
         default: Date.now,
+    },
+    type: { // New field to distinguish chat type
+        type: String,
+        enum: ['group', 'personal'], // Ensure only 'group' or 'personal' values
+        default: 'group', // Default to 'group'
     }
 });
 
