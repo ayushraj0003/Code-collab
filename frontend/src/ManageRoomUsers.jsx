@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-function ManageRoomUsers({ roomId, onlineUsers }) {
+function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) { // Accept onUserClick prop
   const [users, setUsers] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null); 
@@ -75,75 +75,53 @@ function ManageRoomUsers({ roomId, onlineUsers }) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, {}, {
+      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setOwnerId(newOwnerId);
+
+      setOwnerId(newOwnerId); 
       alert('Ownership transferred successfully');
     } catch (error) {
-      console.error('Error changing ownership:', error);
-      alert('Failed to change ownership');
+      console.error('Error transferring ownership:', error);
+      alert('Failed to transfer ownership');
     }
   };
-
-  const handleUserClick = (roomId, userId) => {
-    if (currentUser && currentUser._id === userId) {
-      // If the current user clicks on their own avatar, do nothing
-      return;
-    }
-    
-    navigate(`/room/${roomId}/personal-chat`, { state: { roomId, userId } });
-  };
-  
 
   return (
-    <>
-      {users && users.length > 0 ? (
-        <ul>
-          {users.map(user => (
-            <li
-              key={user._id}
-              className="member-item"
-              onClick={() => handleUserClick(roomId, user._id)} // Add click handler
-              style={{ cursor: 'pointer' }} // Add cursor style to indicate it's clickable
-            >
-              <img src={user.avatar} alt={user.name} className="member-avatar" />
-              <div className="user-name">{user.name}</div>
-              {onlineUsers.includes(user._id) && (
-                <span className="online-indicator"></span> 
-              )}
-              {user._id === ownerId && (
+    <div>
+      <h2>Room Users</h2>
+      <ul>
+        {users.map((user) => (
+          <li key={user._id} className="member-item" onClick={() => onUserClick(user._id)}>
+            {user.avatar && (
+              <img
+                src={user.avatar}
+                alt={`${user.name}'s avatar`}
+                className="avatar"
+                style={{ width: '30px', height: '30px', borderRadius: '50%', marginRight: '10px' }}
+              />
+            )}
+            <strong>{user.name}</strong>  {user._id === ownerId && (
                 <span className="owner-badge"> Owner</span>
               )}
-              {currentUser && currentUser._id === ownerId && user._id !== ownerId && (
-                <>
-                  <button className="more-options" onClick={(e) => {
-                    e.stopPropagation(); // Prevent event bubbling to the li click handler
-                    toggleMenu(user._id);
-                  }}>...</button>
-                  {activeMenuUserId === user._id && (
-                    <div className="options-menu">
-                      <button onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveUser(user._id);
-                      }}>Remove User</button>
-                      <button onClick={(e) => {
-                        e.stopPropagation();
-                        handleChangeOwner(user._id);
-                      }}>Make Owner</button>
-                    </div>
-                  )}
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No users found.</p>
-      )}
-    </>
+            {user._id === currentUser?._id ? ' (You)' : ''}
+            {onlineUsers.includes(user._id) && <span className="online-indicator"></span>}
+            {ownerId === currentUser?._id && user._id !== currentUser._id && (
+              <div>
+                <button onClick={() => toggleMenu(user._id)}>Menu</button>
+                {activeMenuUserId === user._id && (
+                  <div className="user-menu">
+                    <button onClick={() => handleRemoveUser(user._id)}>Remove</button>
+                    <button onClick={() => handleChangeOwner(user._id)}>Make Owner</button>
+                  </div>
+                )}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
 export default ManageRoomUsers;
- 

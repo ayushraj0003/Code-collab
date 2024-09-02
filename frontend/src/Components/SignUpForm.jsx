@@ -52,12 +52,8 @@ function SignUpForm() {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/verify-otp', { email: formData.email, otp });
       alert(response.data.message);
-      if (response.data.success) {
-        setOtpVerified(true); // Mark OTP as verified
-      }
-      if(setOtpVerified){
-        window.location.href="http://localhost:3000/dashboard"
-      }
+      setOtpVerified(true);
+
     } catch (error) {
       console.error('Failed to verify OTP', error);
       alert('Invalid OTP');
@@ -65,6 +61,7 @@ function SignUpForm() {
   };
 
   const handleSubmit = async (event) => {
+    console.log(otpVerified)
     event.preventDefault();
     if (!otpVerified) {
       alert('Please verify OTP before registering.');
@@ -75,6 +72,7 @@ function SignUpForm() {
       const response = await axios.post('http://localhost:5000/api/auth/register', formData);
       console.log(response);
       const token = response.data.token;
+      console.log(token );
       localStorage.setItem('token', token);
       window.location.href = 'http://localhost:3000/dashboard';
     } catch (error) {
@@ -147,8 +145,13 @@ function SignUpForm() {
           onChange={(e) => setOtp(e.target.value)}
           placeholder="Enter OTP"
         />
+        <div className="h">
+
         <button type="button" onClick={handleVerifyOTP}>Verify OTP</button>
         <button type="submit" className="ghost1">Sign Up</button>
+        </div>
+
+        
       </form>
     </div>
   );

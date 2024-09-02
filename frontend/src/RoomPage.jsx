@@ -192,7 +192,7 @@ socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
     );
   };
   const handleGroupChatRedirect = () => {
-    navigate(`/room/${roomId}/group-chat`, { state: { myArray: onlineUsers } });
+    navigate(`/room/${roomId}/group-chat`);
   };
 
   const handleFileInFolderClick = async (file, folderPath = '') => {
@@ -328,13 +328,18 @@ const handleLogout = () => {
     }
   };
   
+  const handleUserClick = (user) => {
+    // Logic to handle user click, e.g., show user profile
+    // alert(`User clicked: ${user.name}`);
+  };
+
   return (
     <div className="room-container">
         <div className="profile-container">
             <div className="room-sidebar">
                 <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
                 <h1>{room.roomName}</h1>
-                <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers} />
+                <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers} onUserClick={handleUserClick}/>
               
             </div>
         </div>

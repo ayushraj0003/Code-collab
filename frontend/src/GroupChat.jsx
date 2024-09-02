@@ -1,34 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { useParams,useLocation, useNavigate  } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ManageRoomUsers from './ManageRoomUsers';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:5000'); 
+const socket = io('http://localhost:5000');
 
 function GroupChat() {
   const { roomId } = useParams();
-  const naveigate = useNavigate();
   const location = useLocation();
+  const { userId: receiverId } = location.state || {}; // Retrieve receiverId for personal chat
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [userDetails, setUserDetails] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [isGroupChat, setIsGroupChat] = useState(!receiverId); // Determine chat mode based on receiverId
 
-  // const onlineUsers = location.state?.myArray || [];
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/chat/${roomId}`);
+        const token = localStorage.getItem('token');
+        const endpoint = isGroupChat 
+          ? `http://localhost:5000/api/chat/${roomId}`
+          : `http://localhost:5000/api/chat/${roomId}/personal/${receiverId}`;
+          
+        const response = await axios.get(endpoint, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setMessages(response.data);
       } catch (err) {
         console.error('Failed to fetch messages', err);
       }
     };
+
     socket.emit('joinRoom', { roomId, token: localStorage.getItem('token') });
     socket.on('onlineUsers', (users) => {
       setOnlineUsers(users);
     });
+
     const fetchUserDetails = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -45,17 +55,21 @@ function GroupChat() {
     fetchUserDetails();
     return () => {
       socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
-            socket.off('onlineUsers'); // Cleanup event listeners
-          };
-  }, [roomId]);
+      socket.off('onlineUsers');
+    };
+  }, [roomId, receiverId, isGroupChat]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
     try {
       const token = localStorage.getItem('token');
+      const endpoint = isGroupChat
+        ? `http://localhost:5000/api/chat/${roomId}`
+        : `http://localhost:5000/api/chat/${roomId}/personal/${receiverId}`;
+
       const response = await axios.post(
-        `http://localhost:5000/api/chat/${roomId}`,
+        endpoint,
         {
           senderId: userDetails._id,
           message: newMessage,
@@ -69,7 +83,7 @@ function GroupChat() {
         ...response.data,
         sender: {
           name: userDetails.name,
-          avatar: userDetails.avatar, // Include avatar in the new message
+          avatar: userDetails.avatar,
         },
       };
 
@@ -79,25 +93,37 @@ function GroupChat() {
       console.error('Failed to send message', err);
     }
   };
+
   const handleLogout = () => {
-    socket.emit('logout', { roomId, token: localStorage.getItem('token')});
-    // socket.disconnect();
+    socket.emit('logout', { roomId, token: localStorage.getItem('token') });
     localStorage.removeItem('token');
-    // navigate('/');
+    navigate('/');
+  };
+
+  const handleGroupHref = () => {
+    setIsGroupChat(true); // Switch to group chat mode
+    navigate(`/room/${roomId}/group-chat`);
+  };
+
+  const handlePersonalChat = (userId) => {
+    setIsGroupChat(false); // Switch to personal chat mode
+    navigate(`/room/${roomId}/group-chat`, { state: { userId } }); // Pass the receiverId through state
   };
 
   return (
     <div className='chat-container'>
       <div className="profile-container">
-        <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers}/>
+        <button onClick={handleGroupHref}>Group Chat</button>
+        {/* Pass handlePersonalChat to ManageRoomUsers */}
+        <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers} onUserClick={handlePersonalChat} />
       </div>
-      <h2>Group Chat for Room: {roomId}</h2>
+      <h2>{isGroupChat ? `Group Chat for Room: ${roomId}` : `Personal Chat with User: ${receiverId}`}</h2>
       <div className="messages">
         {messages.map((message, index) => (
           <div key={index} className="message">
             {message.sender.avatar && (
               <img
-                src={message.sender.avatar} // Avatar URL
+                src={message.sender.avatar}
                 alt={`${message.sender.name}'s avatar`}
                 className="avatar"
                 style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '8px' }}
@@ -106,7 +132,7 @@ function GroupChat() {
             <div>
               <strong>{message.sender.name}</strong>: {message.message}
               <div className="timestamp" style={{ fontSize: '0.8em', color: '#666' }}>
-                {new Date(message.timestamp).toLocaleString()} {/* Format timestamp */}
+                {new Date(message.timestamp).toLocaleString()}
               </div>
             </div>
           </div>

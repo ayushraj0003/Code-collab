@@ -53,10 +53,10 @@ router.post('/:roomId', verifyToken, async (req, res) => {
       res.status(500).json({ error: 'Failed to send message' });
     }
   });
-  router.post('/personal/:roomId', verifyToken, async (req, res) => {
-    const { message, receiverId } = req.body;
-    const { roomId } = req.params;
-    const senderId = req.user.userId;
+  router.post('/:roomId/personal/:receiverId', async (req, res) => {
+    const { message, senderId} = req.body;
+    const { roomId ,receiverId } = req.params;
+    // const senderId = req.user.userId;
     console.log(roomId)
     console.log(message,receiverId)
     console.log(senderId)

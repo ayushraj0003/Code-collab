@@ -30,9 +30,7 @@ router.post('/register', async (req, res) => {
   const { name, email, password, mobile, avatar } = req.body;
 
   try {
-    if (!otps[email]) {
-      return res.status(400).json({ error: 'OTP not verified or expired' });
-  }
+
       let user = await User.findOne({ email });
       if (user) {
           return res.status(400).json({ msg: 'User already exists' });
