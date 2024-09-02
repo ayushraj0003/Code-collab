@@ -14,7 +14,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<AppComponent />} />
         <Route path='/dashboard' element={<Dashboard/>}/>
-        <Route path="/rooms/:roomId" element={<RoomPage />} />
+        <Route path="/room/:roomId" element={<RoomPage />} />
         <Route path="/room/:roomId/video-call" element={<VideoCallPage/>} />
         <Route path="/room/:roomId/group-chat" element={<GroupChat />} />
         <Route path="/room/:roomId/personal-chat" element={<PersonalChat />} />

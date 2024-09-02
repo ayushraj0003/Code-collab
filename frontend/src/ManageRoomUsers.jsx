@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) { // Accept onUserClick prop
+function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) { 
   const [users, setUsers] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null); 
@@ -51,11 +51,10 @@ function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) { // Accept onUse
       });
       
       if (currentUser._id === userId) {
-        // Navigate the removed user to the dashboard
         alert('You have been removed from the room');
-        navigate('/dashboard'); // Redirect to the dashboard
+        navigate('/dashboard');
       } else {
-        setUsers(users.filter(user => user._id !== userId)); // Update the UI
+        setUsers(users.filter(user => user._id !== userId));
         alert('User removed successfully');
       }
     } catch (error) {
@@ -92,7 +91,11 @@ function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) { // Accept onUse
       <h2>Room Users</h2>
       <ul>
         {users.map((user) => (
-          <li key={user._id} className="member-item" onClick={() => onUserClick(user._id)}>
+          <li key={user._id} className="member-item" onClick={() => {
+            if (user._id !== currentUser._id) {  // Prevent clicking on self
+              onUserClick(user._id);
+            }
+          }}>
             {user.avatar && (
               <img
                 src={user.avatar}
@@ -101,9 +104,10 @@ function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) { // Accept onUse
                 style={{ width: '30px', height: '30px', borderRadius: '50%', marginRight: '10px' }}
               />
             )}
-            <strong>{user.name}</strong>  {user._id === ownerId && (
-                <span className="owner-badge"> Owner</span>
-              )}
+            <strong>{user.name}</strong>  
+            {user._id === ownerId && (
+              <span className="owner-badge"> Owner</span>
+            )}
             {user._id === currentUser?._id ? ' (You)' : ''}
             {onlineUsers.includes(user._id) && <span className="online-indicator"></span>}
             {ownerId === currentUser?._id && user._id !== currentUser._id && (

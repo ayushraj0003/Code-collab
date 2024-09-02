@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect(process.env.MONGO_URIS, {
     // useNewUrlParser: true,
     // useUnifiedTopology: true,
 })
@@ -112,6 +112,23 @@ io.on('connection', (socket) => {
   });
 
   socket.on('logout', async ({ roomId, token }) => {
+    try {
+      // Verify the user's token to get the user ID
+      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
+      const userId = decoded.userId; // Adjust based on your token's payload
+
+      // Remove the user from the onlineUsers set
+      onlineUsers.delete(userId);
+
+      // Leave the room and emit the updated list of online users to the room
+      socket.leave(roomId);
+      io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
+    } catch (error) {
+      console.error('Error leaving room:', error);
+      socket.emit('error', 'Invalid token or server error');
+    }
+  });
+  socket.on('disconnectUser', async ({ roomId, token }) => {
     try {
       // Verify the user's token to get the user ID
       const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key

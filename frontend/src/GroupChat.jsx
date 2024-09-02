@@ -53,11 +53,20 @@ function GroupChat() {
 
     fetchMessages();
     fetchUserDetails();
+    
+    // Handle back button or any navigation
+    const handlePopState = () => {
+      navigate(`/room/${roomId}`);  // Redirect to dashboard
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
     return () => {
       socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
       socket.off('onlineUsers');
+      window.removeEventListener('popstate', handlePopState);
     };
-  }, [roomId, receiverId, isGroupChat]);
+  }, [roomId, receiverId, isGroupChat, navigate]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;

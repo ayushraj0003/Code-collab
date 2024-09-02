@@ -76,13 +76,19 @@ function RoomPage() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-  
 
+    const handleBeforeUnload = () => {
+      socket.emit('disconnectUser', { roomId, token: localStorage.getItem('token') });
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
-socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
+      socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
       document.removeEventListener('mousedown', handleClickOutside);
       socket.off('onlineUsers'); // Cleanup event listeners
       socket.off('codeUpdate');
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    socket.disconnect();
     };
 
   }, [roomId],[files],[folders]);
@@ -333,6 +339,10 @@ const handleLogout = () => {
     // alert(`User clicked: ${user.name}`);
   };
 
+  const headtoDashboard = () =>{
+    navigate('/dashboard');
+  }
+
   return (
     <div className="room-container">
         <div className="profile-container">
@@ -340,8 +350,8 @@ const handleLogout = () => {
                 <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
                 <h1>{room.roomName}</h1>
                 <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers} onUserClick={handleUserClick}/>
-              
             </div>
+            <button className='dash-btn' onClick={headtoDashboard}><FaSignOutAlt /> Dashboard</button>
         </div>
 
       <div className="main-content">

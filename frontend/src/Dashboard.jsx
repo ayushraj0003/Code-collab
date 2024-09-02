@@ -130,7 +130,7 @@ function Dashboard() {
   };
 
   const handleRoomClick = (roomId) => {
-    navigate(`/rooms/${roomId}`);
+    navigate(`/room/${roomId}`);
   };
 
   const handleCopyRoomId = () => {
