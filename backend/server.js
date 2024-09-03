@@ -78,6 +78,18 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('sendMessage', async (message) => {
+    console.log('Received message:', message); // Log received message
+    try {
+      io.to(message.roomId).emit('newMessage', message);
+      console.log('Broadcasted message to room:', message); // Log broadcast action
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  });
+  
+  
+
   socket.on('offer', ({ offer, roomId }) => {
     socket.to(roomId).emit('offer', offer);
   });

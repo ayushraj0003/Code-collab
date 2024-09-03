@@ -728,7 +728,7 @@ input {
 }
 
 
-.logout-btn , .dash-btn, .profile-selections span, .group-btn{
+.logout-btn , .dash-btn, .profile-selections span, .group-btn, .logout-btn-dash{
   display: flex;
   align-items: center;
   color: white;
@@ -742,8 +742,15 @@ input {
   justify-self: flex-end;
 }
 
+.logout-btn-dash{
+  background-color: #ff4b4b;
+}
+
 .logout-btn{
   background-color: #ff4b4b;
+  position: fixed;
+  bottom: 5%;
+  z-index: 1;
 }
 
 .header-button{
@@ -768,7 +775,7 @@ input {
   text-align: center;
 }
 
-.logout-btn:hover {
+.logout-btn:hover, .logout-btn-dash:hover {
   background-color: #e04444;
   transform: scale(1.13);
 }
@@ -1132,9 +1139,7 @@ input {
 .txt-box {
   display: flex;
   position: fixed;
-  top: 87%;
-  /* left: 50%; */
-  /* transform: translateX(-50%); */
+  bottom: 5%;
   align-items: center;
   border: 1px solid #ddd;
   border-radius: 30px;
@@ -1143,6 +1148,7 @@ input {
   width: 100%;
   max-width: 680px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  left: 30%;
 }
 
 
@@ -1181,7 +1187,7 @@ input {
   display: flex;
   flex-direction: column;
   padding: 10px;
-  max-height: 70vh; /* Adjust the height as needed */
+  max-height: 80vh; /* Adjust the height as needed */
   overflow-y: auto; /* Allow scrolling if messages overflow */
 }
 

@@ -247,12 +247,13 @@ router.get('/:roomId', verifyToken, async (req, res) => {
       path: 'users',  
       select: 'name avatar', 
     })
-      .populate('folders.files.owner', 'name');// Populate file owners' names
+      .populate('folders.files.owner', 'name')
+ 
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
-
+    
     // Respond with room data including folders and files
     res.status(200).json(room);
   } catch (err) {

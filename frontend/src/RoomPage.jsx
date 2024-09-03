@@ -7,12 +7,13 @@ import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
 import Loader from './Loader'; // Import the Loader component
 import ManageRoomUsers from './ManageRoomUsers';
+import TransferOwnershipModal from './TransferOwnershipModel';
 import './styles.css';
 import './design.css';
 
 const socket = io('http://localhost:5000');
 
-function RoomPage() {
+const RoomPage = ({ro,userName}) => {
   const { roomId } = useParams();
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
@@ -28,6 +29,9 @@ function RoomPage() {
   const [openProfile, setOpenProfile] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [showModal, setShowModal] = useState(false);  
+  const [owner, setowner] = useState(null);
+  const [userNames, setUserNames] = useState([]); 
   const dropdownRef = useRef(null);
   const avatarRef = useRef(null);
 
@@ -40,6 +44,15 @@ function RoomPage() {
         const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+      
+        const users = response.data.users; // Assuming users is an array of user objectsc
+        
+        const names = users.map(user => ({ id: user._id, name: user.name })); // Extract user names
+        setUserNames(names); 
+        
+        // setowner(response.data.roomowner)
+       
+   
 
         const userResponse = await axios.get('http://localhost:5000/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
@@ -353,29 +366,27 @@ const handleLogout = () => {
   };
   
   const handleLeaveRoom = async () => {
-    const isOwner = await checkRoomOwner(); // Get the owner status directly
-    console.log(isOwner);
-  
+    const isOwner = await checkRoomOwner(); 
     if (isOwner) {
-      const newOwnerId = prompt('You are the owner of this room. Please enter the user ID of the new owner before leaving:');
-      if (newOwnerId) {
-        try {
-          const token = localStorage.getItem('token');
-          console.log(token)
-          await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          alert('Ownership transferred successfully. You can now leave the room.');
-          handleLeaveRoomRequest();
-        } catch (err) {
-          alert('Failed to transfer ownership.');
-        }
-      }
+      setShowModal(true);
     } else {
       handleLeaveRoomRequest();
     }
   };
-  
+
+  const handleTransferOwnership = async (newOwnerId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Ownership transferred successfully. You can now leave the room.');
+      setShowModal(false);
+      handleLeaveRoomRequest();
+    } catch (err) {
+      alert('Failed to transfer ownership.');
+    }
+  };
 
   const handleLeaveRoomRequest = async () => {
     try {
@@ -429,12 +440,19 @@ const handleLogout = () => {
         <div className="profile-options" ref={dropdownRef}>
           <div className="profile-selections">
             <span onClick={toggleModal}>Profile</span>
-            <button onClick={handleLogout} className="logout-btn">
+            <button onClick={handleLogout} className="logout-btn-dash">
               <FaSignOutAlt /> Logout
             </button>
-            <button onClick={handleLeaveRoom}>
+            <button onClick={handleLeaveRoom} className='logout-btn-dash'>
         Leave Room
       </button>
+      {showModal && (
+        <TransferOwnershipModal
+          members={userNames}
+          onTransfer={handleTransferOwnership}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
             {room.userId === userDetails?._id && ( 
               <button className="header-button" onClick={handleDeleteRoom}>
                 <FaTrashAlt /> Delete Room
