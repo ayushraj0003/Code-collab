@@ -728,7 +728,7 @@ input {
 }
 
 
-.logout-btn , .dash-btn, .profile-selections span{
+.logout-btn , .dash-btn, .profile-selections span, .group-btn{
   display: flex;
   align-items: center;
   color: white;
@@ -1115,4 +1115,105 @@ input {
   position: absolute;
   bottom: 5%;
   background-color: purple;
+}
+
+.group-btn{
+  background-color: #3498db;
+  width: 55%;
+  border-radius: 15px;
+  content: "";
+  z-index: 1;
+}
+
+.group-btn:hover{
+   transform: scale(1.2);
+}
+
+.txt-box {
+  display: flex;
+  position: fixed;
+  top: 87%;
+  /* left: 50%; */
+  /* transform: translateX(-50%); */
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  padding: 5px 10px;
+  background-color: #f5f5f5;
+  width: 100%;
+  max-width: 680px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
+.txt-box input[type="text"] {
+  flex: 1; /* Allow the input to grow */
+  border: none; /* Remove default border */
+  border-radius: 20px; /* Rounded corners */
+  padding: 10px; /* Padding inside the input */
+  margin-right: 10px; /* Space between input and button */
+  font-size: 16px; /* Font size */
+  outline: none; /* Remove outline on focus */
+  background-color: #fff; /* White background */
+}
+
+.txt-box input[type="text"]::placeholder {
+  color: #aaa; /* Placeholder text color */
+}
+
+.txt-box button {
+  background-color: #007bff; 
+  color: #fff; 
+  border: none; 
+  padding: 10px 20px;
+  border-radius: 20px; 
+  font-size: 16px; 
+  cursor: pointer;
+  transition: background-color 0.3s; 
+}
+
+.txt-box button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  max-height: 70vh; /* Adjust the height as needed */
+  overflow-y: auto; /* Allow scrolling if messages overflow */
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+  max-width: 70%; /* Limit the width of the message */
+}
+
+.sent {
+  margin-left: auto; /* Align the sent messages to the right */
+  background-color: #d1e7dd; /* Light green background for sender messages */
+  padding: 8px 12px;
+  border-radius: 12px 12px 0 12px; /* Rounded corners */
+  align-self: flex-end;
+}
+
+.received {
+  margin-right: auto; /* Align the received messages to the left */
+  background-color: #f8d7da; /* Light red background for received messages */
+  padding: 8px 12px;
+  border-radius: 12px 12px 12px 0; /* Rounded corners */
+  align-self: flex-start;
+}
+
+.avatar {
+  margin-right: 8px;
+}
+
+.timestamp {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 4px; /* Space above the timestamp */
 }

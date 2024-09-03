@@ -244,8 +244,8 @@ router.get('/:roomId', verifyToken, async (req, res) => {
     // Find the room by its roomId
     const room = await Room.findOne({ roomId })
     .populate({
-      path: 'users',  // Populate users field
-      select: 'name avatar', // Select both name and avatar fields
+      path: 'users',  
+      select: 'name avatar', 
     })
       .populate('folders.files.owner', 'name');// Populate file owners' names
 
@@ -608,7 +608,7 @@ router.delete('/:roomId/remove-user/:removeId', verifyToken, async (req, res) =>
 router.post('/:roomId/change-owner/:newOwnerId', verifyToken, async (req, res) => {
   try {
     const { roomId, newOwnerId } = req.params;
-
+    console.log(newOwnerId)
     // Ensure `userId` is a valid ObjectId
     // if (!mongoose.Types.ObjectId.isValid(removeId)) {
     //   return res.status(400).json({ message: 'Invalid user ID format.' });
@@ -635,5 +635,49 @@ router.post('/:roomId/change-owner/:newOwnerId', verifyToken, async (req, res) =
     res.status(500).json({ message: 'Internal server error.' });
   }
 });
+router.delete('/:roomId/leave', verifyToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user.userId;
+    console.log(roomId)
+    console.log(userId)
 
+    const room = await Room.findOne({roomId});
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // If the user is the owner and no new owner is assigned, block leaving
+    if (room.userId.toString() === userId.toString()) {
+      return res.status(403).json({ message: 'You must transfer ownership before leaving the room' });
+    }
+
+    room.users = room.users.filter((id) => id.toString() !== userId);
+    await room.save();
+
+    res.json({ message: 'You have left the room' });
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ message: 'Failed to leave the room' });
+  }
+});
+router.get('/:roomId/owner', verifyToken, async (req, res) => {
+  try {
+    const {roomId}=req.params;
+    const room = await Room.findOne({roomId});
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check if the logged-in user is the owner of the room
+    const owner = room.userId.toString() === req.user.userId;
+
+    return res.status(200).json({ owner });
+  } catch (error) {
+    console.error("Error checking room owner:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
 module.exports = router;

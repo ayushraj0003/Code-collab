@@ -27,6 +27,7 @@ function RoomPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);  
   const [openProfile, setOpenProfile] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [isOwner, setIsOwner] = useState(false);
   const dropdownRef = useRef(null);
   const avatarRef = useRef(null);
 
@@ -43,6 +44,7 @@ function RoomPage() {
         const userResponse = await axios.get('http://localhost:5000/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log(token)
         setUserDetails(userResponse.data);
         setRoom(response.data);
         setFiles(response.data.files || []);
@@ -112,6 +114,7 @@ function RoomPage() {
   useEffect(() => {
     console.log("Updated online users:", onlineUsers);
   }, [onlineUsers]);
+
   const handleCodeChange = (newCode) => {
     setCode(newCode);
     socket.emit('codeChange', { roomId, code: newCode });
@@ -198,7 +201,7 @@ function RoomPage() {
     );
   };
   const handleGroupChatRedirect = () => {
-    navigate(`/room/${roomId}/group-chat`);
+    navigate(`/room/${roomId}/chat`);
   };
 
   const handleFileInFolderClick = async (file, folderPath = '') => {
@@ -230,7 +233,8 @@ function RoomPage() {
       setError('Failed to fetch the latest file version.');
     }
   };
-
+   
+ 
   const handleVideoCall = () => {
     navigate(`/room/${roomId}/video-call`);
   };
@@ -334,6 +338,57 @@ const handleLogout = () => {
     }
   };
   
+  const checkRoomOwner = async () => {
+    try {
+      const token = localStorage.getItem('token'); // Corrected from setItem to getItem
+      const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}/owner`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      return response.data.owner; // Return the owner status
+    } catch (error) {
+      console.error("Error checking room ownership:", error);
+      return false; // Return false in case of error
+    }
+  };
+  
+  const handleLeaveRoom = async () => {
+    const isOwner = await checkRoomOwner(); // Get the owner status directly
+    console.log(isOwner);
+  
+    if (isOwner) {
+      const newOwnerId = prompt('You are the owner of this room. Please enter the user ID of the new owner before leaving:');
+      if (newOwnerId) {
+        try {
+          const token = localStorage.getItem('token');
+          console.log(token)
+          await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          alert('Ownership transferred successfully. You can now leave the room.');
+          handleLeaveRoomRequest();
+        } catch (err) {
+          alert('Failed to transfer ownership.');
+        }
+      }
+    } else {
+      handleLeaveRoomRequest();
+    }
+  };
+  
+
+  const handleLeaveRoomRequest = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/api/rooms/${roomId}/leave`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('You have left the room.');
+      navigate('/dashboard');
+    } catch (err) {
+      alert('Failed to leave the room.');
+    }
+  };
   const handleUserClick = (user) => {
     // Logic to handle user click, e.g., show user profile
     // alert(`User clicked: ${user.name}`);
@@ -377,6 +432,9 @@ const handleLogout = () => {
             <button onClick={handleLogout} className="logout-btn">
               <FaSignOutAlt /> Logout
             </button>
+            <button onClick={handleLeaveRoom}>
+        Leave Room
+      </button>
             {room.userId === userDetails?._id && ( 
               <button className="header-button" onClick={handleDeleteRoom}>
                 <FaTrashAlt /> Delete Room
