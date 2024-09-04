@@ -6,7 +6,6 @@ import RoomPage from './RoomPage';
 import VideoCallPage from './VideoCallPage';
 import AppComponent from './Components/App';
 import GroupChat from './GroupChat';
-import PersonalChat from './PersonalChat';
 
 const App = () => {
   return (
@@ -17,7 +16,6 @@ const App = () => {
         <Route path="/room/:roomId" element={<RoomPage />} />
         <Route path="/room/:roomId/video-call" element={<VideoCallPage/>} />
         <Route path="/room/:roomId/chat" element={<GroupChat />} />
-        <Route path="/room/:roomId/personal-chat" element={<PersonalChat />} />
       </Routes>
     </Router>
   );

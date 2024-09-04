@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URIS, {
+mongoose.connect(process.env.MONGO_URI, {
     // useNewUrlParser: true,
     // useUnifiedTopology: true,
 })
@@ -79,10 +79,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('sendMessage', async (message) => {
-    console.log('Received message:', message); // Log received message
+    // console.log('Received message:', message); // Log received message
     try {
       io.to(message.roomId).emit('newMessage', message);
-      console.log('Broadcasted message to room:', message); // Log broadcast action
+      // console.log('Broadcasted message to room:', message); // Log broadcast action
     } catch (error) {
       console.error('Error sending message:', error);
     }

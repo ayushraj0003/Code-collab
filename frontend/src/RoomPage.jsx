@@ -6,10 +6,10 @@ import io from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
 import Loader from './Loader'; // Import the Loader component
-import ManageRoomUsers from './ManageRoomUsers';
 import TransferOwnershipModal from './TransferOwnershipModel';
 import './styles.css';
 import './design.css';
+import RoomMembers from './RoomMembers';
 
 const socket = io('http://localhost:5000');
 
@@ -415,7 +415,7 @@ const handleLogout = () => {
             <div className="room-sidebar">
                 <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
                 <h1>{room.roomName}</h1>
-                <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers} onUserClick={handleUserClick}/>
+                <RoomMembers roomId={roomId} onlineUsers={onlineUsers}/>
             </div>
             <button className='dash-btn' onClick={headtoDashboard}><FaSignOutAlt /> Dashboard</button>
         </div>

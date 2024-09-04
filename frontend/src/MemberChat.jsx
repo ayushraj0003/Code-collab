@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) { 
+function MemberChat({ roomId, onlineUsers, onUserClick }) { 
   const [users, setUsers] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null); 
@@ -39,52 +39,6 @@ function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) {
     fetchRoomDetails();
   }, [roomId]);
 
-  const handleRemoveUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to remove this user?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/rooms/${roomId}/remove-user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      if (currentUser._id === userId) {
-        alert('You have been removed from the room');
-        navigate('/dashboard');
-      } else {
-        setUsers(users.filter(user => user._id !== userId));
-        alert('User removed successfully');
-      }
-    } catch (error) {
-      console.error('Error removing user:', error);
-      alert('Failed to remove user');
-    }
-  };
-
-  const toggleMenu = (userId) => {
-    setActiveMenuUserId(prev => (prev === userId ? null : userId)); 
-  };
-
-  const handleChangeOwner = async (newOwnerId) => {
-    if (!window.confirm('Are you sure you want to transfer ownership to this user?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setOwnerId(newOwnerId); 
-      alert('Ownership transferred successfully');
-    } catch (error) {
-      console.error('Error transferring ownership:', error);
-      alert('Failed to transfer ownership');
-    }
-  };
 
   return (
     <div>
@@ -110,17 +64,6 @@ function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) {
             )}
             {user._id === currentUser?._id ? ' (You)' : ''}
             {onlineUsers.includes(user._id) && <span className="online-indicator"></span>}
-            {ownerId === currentUser?._id && user._id !== currentUser._id && (
-              <div>
-                <button onClick={() => toggleMenu(user._id)}>Menu</button>
-                {activeMenuUserId === user._id && (
-                  <div className="user-menu">
-                    <button onClick={() => handleRemoveUser(user._id)}>Remove</button>
-                    <button onClick={() => handleChangeOwner(user._id)}>Make Owner</button>
-                  </div>
-                )}
-              </div>
-            )}
           </li>
         ))}
       </ul>
@@ -128,4 +71,4 @@ function ManageRoomUsers({ roomId, onlineUsers, onUserClick }) {
   );
 }
 
-export default ManageRoomUsers;
+export default MemberChat;

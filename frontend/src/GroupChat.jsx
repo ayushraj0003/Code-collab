@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ManageRoomUsers from './ManageRoomUsers';
+import ManageRoomUsers from './MemberChat';
 import io from 'socket.io-client';
 import { FaSignOutAlt } from 'react-icons/fa';
 const socket = io('http://localhost:5000');
@@ -86,13 +86,13 @@ function GroupChat() {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !userDetails) return; // Ensure userDetails is loaded before sending a message
-
+  
     try {
       const token = localStorage.getItem('token');
       const endpoint = isGroupChat
         ? `http://localhost:5000/api/chat/${roomId}`
         : `http://localhost:5000/api/chat/${roomId}/personal/${receiverId}`;
-
+  
       const response = await axios.post(
         endpoint,
         {
@@ -103,7 +103,7 @@ function GroupChat() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+  
       const newMsg = {
         ...response.data,
         sender: {
@@ -112,16 +112,17 @@ function GroupChat() {
           avatar: userDetails.avatar,
         },
       };
-
+  
       // Emit the new message to the server so it can be broadcasted
-      socket.emit('sendMessage', {newMsg,roomId});
-
-      setMessages((prevMessages) => [...prevMessages, newMsg]);
-      setNewMessage('');
+      socket.emit('sendMessage', { newMsg, roomId });
+  
+      // Do NOT update messages locally here; it will be updated via socket event
+      setNewMessage(''); // Clear the input after sending
     } catch (err) {
       console.error('Failed to send message', err);
     }
   };
+  
 
   const handleLogout = () => {
     socket.emit('logout', { roomId, token: localStorage.getItem('token') });
