@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ManageRoomUsers from './MemberChat';
+import MemberChat from './MemberChat';
 import io from 'socket.io-client';
-import { FaSignOutAlt } from 'react-icons/fa';
+import { FaSignOutAlt, FaUsers } from 'react-icons/fa';
 const socket = io('http://localhost:5000');
 
 function GroupChat() {
@@ -147,8 +147,15 @@ function GroupChat() {
   return (
     <div className='chat-container'>
       <div className="profile-container">
-        <button className='group-btn' onClick={handleGroupHref}>Group Chat</button>
-        <ManageRoomUsers roomId={roomId} onlineUsers={onlineUsers} onUserClick={handlePersonalChat} />
+        <div id="group-btn-div">
+            <button
+            className={`group-btn ${isGroupChat ? 'active' : ''}`} 
+            onClick={handleGroupHref}
+          >
+            <FaUsers size={34}  /> Group Chat
+          </button>
+        </div>
+        <MemberChat roomId={roomId} onlineUsers={onlineUsers} onUserClick={handlePersonalChat} activeUserId={isGroupChat ? null : receiverId}  />
         <div className="logout">
           <button onClick={handleLogout} className="logout-btn">
             <FaSignOutAlt /> Logout

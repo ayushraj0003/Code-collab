@@ -1098,6 +1098,7 @@ input {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
+  transition: transform 0.3s linear;
 }
 
 .member-avatar {
@@ -1125,11 +1126,14 @@ input {
 }
 
 .group-btn{
-  background-color: #3498db;
+  background-color: #f0f0f0;
   width: 55%;
   border-radius: 15px;
   content: "";
   z-index: 1;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  color: black;
 }
 
 .group-btn:hover{
@@ -1168,7 +1172,7 @@ input {
 }
 
 .txt-box button {
-  background-color: #007bff; 
+  background-color:  #6200ea; 
   color: #fff; 
   border: none; 
   padding: 10px 20px;
@@ -1179,7 +1183,7 @@ input {
 }
 
 .txt-box button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color:  #3700b3; /* Darker blue on hover */
 
 }
 
@@ -1223,3 +1227,41 @@ input {
   color: #666;
   margin-top: 4px; /* Space above the timestamp */
 }
+
+
+.member-item.active {
+  /* background-color: #fd800c; Highlight color */
+  background-image: linear-gradient(#2c6687, #68d1dc); 
+  /* border-left: 4px solid #047dff; Active indicator */
+  border-left: 6px solid #e7edf0; /* Active indicator */
+  transform: scale(1.2);
+  color: white ;
+  font-weight: bold;
+}
+
+
+.group-btn.active{
+  background-color: #6200ea;
+  color: white;
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.message.sent {
+  justify-content: flex-end;
+}
+
+.message.received {
+  justify-content: flex-start;
+}
+
+.txt-box {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
