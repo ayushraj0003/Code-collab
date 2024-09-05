@@ -119,7 +119,24 @@ router.post('/login', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+router.get('/userdetail/:user', async (req, res) => {
+  try {
+    // Fetch user details using the ID from the token payload
+    const {user}=req.params;
+    console.log('User ID from token:', user);
+    const cuser = await User.findById(user)
+  //   .select('-password'); // Exclude the password field
 
+    if (!cuser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(cuser);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
 router.get('/details', verifyToken, async (req, res) => {
     try {
       // Fetch user details using the ID from the token payload

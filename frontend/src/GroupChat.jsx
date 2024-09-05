@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MemberChat from './MemberChat';
 import io from 'socket.io-client';
 import { FaSignOutAlt, FaUsers } from 'react-icons/fa';
+
 const socket = io('http://localhost:5000');
 
 function GroupChat() {
@@ -16,6 +17,7 @@ function GroupChat() {
   const [userDetails, setUserDetails] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isGroupChat, setIsGroupChat] = useState(!receiverId); // Determine chat mode based on receiverId
+  const messagesEndRef = useRef(null); // Ref to keep track of the end of the messages list
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -33,10 +35,10 @@ function GroupChat() {
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem('token');
-        const endpoint = isGroupChat 
+        const endpoint = isGroupChat
           ? `http://localhost:5000/api/chat/${roomId}`
           : `http://localhost:5000/api/chat/${roomId}/personal/${receiverId}`;
-          
+
         const response = await axios.get(endpoint, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -45,6 +47,7 @@ function GroupChat() {
         console.error('Failed to fetch messages', err);
       }
     };
+
     socket.on('connect', () => {
       console.log('Socket connected:', socket.id);
     });
@@ -52,26 +55,28 @@ function GroupChat() {
     socket.on('disconnect', () => {
       console.log('Socket disconnected');
     });
+
     // Join the room via socket
     socket.emit('joinRoom', { roomId, token: localStorage.getItem('token') });
     socket.on('onlineUsers', (users) => {
       setOnlineUsers(users);
     });
 
-    socket.on('newMessage', ({ newMsg }) => { // Destructure to get newMsg
-      if (newMsg && newMsg.sender && newMsg.sender._id) { // Validate message data
+    socket.on('newMessage', ({ newMsg }) => {
+      if (newMsg && newMsg.sender && newMsg.sender._id) {
         console.log('Received new message:', newMsg);
         setMessages((prevMessages) => [...prevMessages, newMsg]);
       } else {
         console.error('Received invalid message data:', newMsg);
       }
     });
+
     fetchUserDetails();
     fetchMessages();
-    
+
     // Handle back button or any navigation
     const handlePopState = () => {
-      navigate(`/room/${roomId}`);  // Redirect to dashboard
+      navigate(`/room/${roomId}`); // Redirect to dashboard
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -84,15 +89,22 @@ function GroupChat() {
     };
   }, [roomId, receiverId, isGroupChat, navigate]);
 
+  useEffect(() => {
+    // Scroll to the bottom whenever messages change
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !userDetails) return; // Ensure userDetails is loaded before sending a message
-  
+
     try {
       const token = localStorage.getItem('token');
       const endpoint = isGroupChat
         ? `http://localhost:5000/api/chat/${roomId}`
         : `http://localhost:5000/api/chat/${roomId}/personal/${receiverId}`;
-  
+
       const response = await axios.post(
         endpoint,
         {
@@ -103,7 +115,7 @@ function GroupChat() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+
       const newMsg = {
         ...response.data,
         sender: {
@@ -112,17 +124,16 @@ function GroupChat() {
           avatar: userDetails.avatar,
         },
       };
-  
+
       // Emit the new message to the server so it can be broadcasted
       socket.emit('sendMessage', { newMsg, roomId });
-  
+
       // Do NOT update messages locally here; it will be updated via socket event
       setNewMessage(''); // Clear the input after sending
     } catch (err) {
       console.error('Failed to send message', err);
     }
   };
-  
 
   const handleLogout = () => {
     socket.emit('logout', { roomId, token: localStorage.getItem('token') });
@@ -145,17 +156,20 @@ function GroupChat() {
   }
 
   return (
-    <div className='chat-container'>
+    <div className="chat-container">
       <div className="profile-container">
-        <div id="group-btn-div">
-            <button
-            className={`group-btn ${isGroupChat ? 'active' : ''}`} 
-            onClick={handleGroupHref}
-          >
-            <FaUsers size={34}  /> Group Chat
-          </button>
-        </div>
-        <MemberChat roomId={roomId} onlineUsers={onlineUsers} onUserClick={handlePersonalChat} activeUserId={isGroupChat ? null : receiverId}  />
+        <button
+          className={`group-btn ${isGroupChat ? 'active' : ''}`}
+          onClick={handleGroupHref}
+        >
+          <FaUsers size={34} /> Group Chat
+        </button>
+        <MemberChat
+          roomId={roomId}
+          onlineUsers={onlineUsers}
+          onUserClick={handlePersonalChat}
+          activeUserId={isGroupChat ? null : receiverId}
+        />
         <div className="logout">
           <button onClick={handleLogout} className="logout-btn">
             <FaSignOutAlt /> Logout
@@ -163,7 +177,6 @@ function GroupChat() {
         </div>
       </div>
       <div className="main-content">
-        <h2>{isGroupChat ? `Group Chat for Room: ${roomId}` : `Personal Chat with User: ${receiverId}`}</h2>
         <div className="messages">
           {messages.map((message, index) => {
             const isSender = message.sender._id === userDetails._id; // Check if the message is from the current user
@@ -192,8 +205,9 @@ function GroupChat() {
               </div>
             );
           })}
+          <div ref={messagesEndRef} /> {/* Scroll to this element */}
         </div>
-       <div className="txt-box">
+        <div className="txt-box">
           <input
             type="text"
             value={newMessage}

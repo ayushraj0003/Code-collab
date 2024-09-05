@@ -728,7 +728,7 @@ input {
 }
 
 
-.logout-btn , .dash-btn, .profile-selections span, .group-btn, .logout-btn-dash{
+.logout-btn , .dash-btn, .profile-selections span, .logout-btn-dash{
   display: flex;
   align-items: center;
   color: white;
@@ -1126,18 +1126,19 @@ input {
 }
 
 .group-btn{
-  background-color: #f0f0f0;
-  width: 55%;
   border-radius: 15px;
   content: "";
   z-index: 1;
   padding: 10px 15px;
-  margin-bottom: 10px;
   color: black;
-}
-
-.group-btn:hover{
-   transform: scale(1.2);
+  width: 90%;
+  background-color: #9ac333;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  /* justify-content: center; */
+  gap: 15px;
+  transition: transform 0.3s linear;
 }
 
 .txt-box {
@@ -1229,20 +1230,22 @@ input {
 }
 
 
-.member-item.active {
-  /* background-color: #fd800c; Highlight color */
+.member-item.active{
   background-image: linear-gradient(#2c6687, #68d1dc); 
-  /* border-left: 4px solid #047dff; Active indicator */
   border-left: 6px solid #e7edf0; /* Active indicator */
   transform: scale(1.2);
   color: white ;
   font-weight: bold;
 }
 
-
 .group-btn.active{
-  background-color: #6200ea;
-  color: white;
+  background-image: linear-gradient(#2c6687, #68d1dc); 
+  width: 100%;
+  border-left: 6px solid #e7edf0;
+  border-radius: 0px;
+  transform: scale(1.2);
+  color: white ;
+  font-weight: bold;
 }
 
 .message {
@@ -1265,3 +1268,9 @@ input {
   margin-top: 10px;
 }
 
+.member-item {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
