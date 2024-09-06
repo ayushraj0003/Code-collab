@@ -216,7 +216,7 @@ function GroupChat() {
             )
           )}
         </div>
-        <div className="messages">
+        <div className={`messages ${showSidebar ? 'short' : " "}`}>
           {messages.map((message, index) => {
             const isSender = message.sender._id === userDetails._id; // Check if the message is from the current user
 
@@ -246,7 +246,7 @@ function GroupChat() {
           })}
           <div ref={messagesEndRef}></div>
         </div>
-        <div className="txt-box">
+        <div className={`txt-box ${showSidebar ? 'short' : ''}`}>
           <input
             type="text"
             value={newMessage}
