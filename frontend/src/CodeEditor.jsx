@@ -7,7 +7,7 @@ import 'codemirror/mode/clike/clike';
 import 'codemirror/mode/python/python';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:5000'); // Adjust the URL as needed
+const socket = io('http://localhost:5000'); // Initialize socket outside component to avoid multiple connections
 
 const CodeEditor = ({ code, onCodeChange, roomId }) => {
   const [language, setLanguage] = useState('javascript');
@@ -15,14 +15,15 @@ const CodeEditor = ({ code, onCodeChange, roomId }) => {
 
   useEffect(() => {
     if (roomId) {
-      socket.emit('joinRoom', roomId);
+      const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
+
+      socket.emit('joinRoom', { roomId, token });
 
       socket.on('codeUpdate', (updatedCode) => {
         onCodeChange(updatedCode);
       });
 
       socket.on('userTyping', ({ lineNumber, username }) => {
-        console.log(`Typing event received for line ${lineNumber} by ${username}`);
         setTypingUsers((prev) => ({ ...prev, [lineNumber]: username }));
         setTimeout(() => {
           setTypingUsers((prev) => {
@@ -34,7 +35,9 @@ const CodeEditor = ({ code, onCodeChange, roomId }) => {
       });
 
       return () => {
-        socket.emit('leaveRoom', roomId);
+        socket.emit('leaveRoom', { roomId, token });
+        socket.off('codeUpdate');
+        socket.off('userTyping');
       };
     }
   }, [roomId, onCodeChange]);
@@ -50,9 +53,8 @@ const CodeEditor = ({ code, onCodeChange, roomId }) => {
 
   const handleCursorActivity = (editor) => {
     const cursor = editor.getCursor();
-    const lineNumber = cursor.line + 1; // Convert zero-indexed to one-indexed
-    const username = localStorage.getItem('username') || 'Unknown User'; // Retrieve or default to avoid null
-    console.log(`Emitting typing event for line ${lineNumber} by ${username}`);
+    const lineNumber = cursor.line + 1;
+    const username = localStorage.getItem('username') || 'Unknown User';
     socket.emit('typing', { roomId, lineNumber, username });
   };
 

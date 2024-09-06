@@ -528,7 +528,7 @@ const handleLogout = () => {
             <p>No files found.</p>
           )}
           <h2>Folder Structure:</h2>
-          <RenderFoldersComponent folders={folders} />
+          <RenderFoldersComponent folders={folders} roomId={roomId}/>
           {/* {folders.length > 0 ? renderFolders(folders) : <p>No folders available</p>} */}
         </div>
         

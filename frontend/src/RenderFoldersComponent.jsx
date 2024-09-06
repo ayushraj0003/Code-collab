@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const RenderFoldersComponent = ({ folders = [], handleFileInFolderClick }) => {
+const RenderFoldersComponent = ({ folders = [], roomId }) => {
   const [expandedFolders, setExpandedFolders] = useState({});
+  const navigate = useNavigate(); // useNavigate hook to handle navigation
 
   // Toggle folder expansion state
   const handleFolderClick = (folderPath) => {
@@ -9,6 +11,11 @@ const RenderFoldersComponent = ({ folders = [], handleFileInFolderClick }) => {
       ...prevExpandedFolders,
       [folderPath]: !prevExpandedFolders[folderPath], // Toggle the expansion state
     }));
+  };
+
+  // Handle file click and navigate to the CodeEditor page
+  const handleFileInFolderClick = (file) => {
+    navigate(`/code-editor`, { state: { file, roomId } }); // Pass file and roomId via state
   };
 
   // Build the folder tree from the folder paths
@@ -59,7 +66,7 @@ const RenderFoldersComponent = ({ folders = [], handleFileInFolderClick }) => {
                   {node[folderName].files.length > 0 && (
                     <ul>
                       {node[folderName].files.map((file, fileIndex) => (
-                        <li key={fileIndex} onClick={() => handleFileInFolderClick(file, fullPath)}>
+                        <li key={fileIndex} onClick={() => handleFileInFolderClick(file)}>
                           <img src="/images/file.png" alt="File" className="folder-icon" />
                           {file.filename}
                         </li>
