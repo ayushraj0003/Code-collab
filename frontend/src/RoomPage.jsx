@@ -10,10 +10,11 @@ import TransferOwnershipModal from './TransferOwnershipModel';
 import './styles.css';
 import './design.css';
 import RoomMembers from './RoomMembers';
+import RenderFoldersComponent from './RenderFoldersComponent'
 
 const socket = io('http://localhost:5000');
 
-const RoomPage = ({ro,userName}) => {
+const RoomPage = () => {
   const { roomId } = useParams();
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
@@ -252,59 +253,87 @@ const RoomPage = ({ro,userName}) => {
     navigate(`/room/${roomId}/video-call`);
   };
 
-  const renderFolders = (folders) => {
-    const buildFolderTree = (folders) => {
-      const tree = {};
+  // const RenderFoldersComponent = ({ folders }) => {
+  //   const [expandedFolders, setExpandedFolders] = useState({});
   
-      folders.forEach((folder) => {
-        const parts = folder.path.split('/').filter(Boolean); // Split path into parts
-        let current = tree;
+  //   // Toggle folder expansion state
+  //   const handleFolderClick = (folderPath) => {
+  //     setExpandedFolders((prevExpandedFolders) => ({
+  //       ...prevExpandedFolders,
+  //       [folderPath]: !prevExpandedFolders[folderPath], // Toggle the expansion state
+  //     }));
+  //   };
   
-        parts.forEach((part, index) => {
-          if (!current[part]) {
-            current[part] = { files: [], subfolders: {} };
-          }
+  //   // Build the folder tree from the folder paths
+  //   const buildFolderTree = (folders) => {
+  //     const tree = {};
   
-          if (index === parts.length - 1) {
-            current[part].files = folder.files; // Assign files to the last part of the path
-          }
+  //     folders.forEach((folder) => {
+  //       const parts = folder.path.split('/').filter(Boolean); // Split path into parts
+  //       let current = tree;
   
-          current = current[part].subfolders; // Move to the next subfolder level
-        });
-      });
+  //       parts.forEach((part, index) => {
+  //         if (!current[part]) {
+  //           current[part] = { files: [], subfolders: {} };
+  //         }
   
-      return tree;
-    };
+  //         if (index === parts.length - 1) {
+  //           current[part].files = folder.files; // Assign files to the last part of the path
+  //           current[part].folderName = folder.folderName; // Assign folder name
+  //         }
   
-    const renderTree = (node, path = '') => {
-      return (
-        <ul>
-          {Object.keys(node).map((folderName, index) => (
-            <li key={index}>
-              <span onClick={() => handleFolderClick(folderName)}>
-                <img src="/images/folder.png" alt="Folder" className="folder-icon" />
-                <strong>{folderName}</strong>
-              </span>
-              {node[folderName].files.length > 0 && (
-                <ul>
-                  {node[folderName].files.map((file, fileIndex) => (
-                    <li key={fileIndex} onClick={() => handleFileInFolderClick(file, `${path}/${folderName}`)}>
-                      <img src="/images/file.png" alt="File" className="folder-icon" />
-                      {file.filename}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {renderTree(node[folderName].subfolders, `${path}/${folderName}`)}
-            </li>
-          ))}
-        </ul>
-      );
-    };
+  //         current = current[part].subfolders; // Move to the next subfolder level
+  //       });
+  //     });
   
-    const folderTree = buildFolderTree(folders);
-    return renderTree(folderTree);
-  };
+  //     return tree;
+  //   };
+  
+  //   // Render the folder tree recursively
+  //   const renderTree = (node, path = '') => {
+  //     return (
+  //       <ul>
+  //         {Object.keys(node).map((folderName, index) => {
+  //           const fullPath = `${path}/${folderName}`.replace(/^\/+/, ''); // Full path to the folder
+  //           const isExpanded = expandedFolders[fullPath]; // Check if the folder is expanded
+  
+  //           return (
+  //             <li key={index}>
+  //               {/* Folder Click Handler */}
+  //               <span onClick={() => handleFolderClick(fullPath)}>
+  //                 <img src="/images/folder.png" alt="Folder" className="folder-icon" />
+  //                 <strong>{folderName}</strong>
+  //               </span>
+  
+  //               {/* Render Subfolders and Files if Folder is Expanded */}
+  //               {isExpanded && (
+  //                 <>
+  //                   {/* Render Files in the Current Folder */}
+  //                   {node[folderName].files.length > 0 && (
+  //                     <ul>
+  //                       {node[folderName].files.map((file, fileIndex) => (
+  //                         <li key={fileIndex} onClick={() => handleFileInFolderClick(file, fullPath)}>
+  //                           <img src="/images/file.png" alt="File" className="folder-icon" />
+  //                           {file.filename}
+  //                         </li>
+  //                       ))}
+  //                     </ul>
+  //                   )}
+  
+  //                   {/* Recursively Render Subfolders */}
+  //                   {renderTree(node[folderName].subfolders, fullPath)}
+  //                 </>
+  //               )}
+  //             </li>
+  //           );
+  //         })}
+  //       </ul>
+  //     );
+  //   };
+  
+  //   const folderTree = buildFolderTree(folders); // Build the folder tree from the provided data
+  //   // return <div>{renderTree(folderTree)}</div>; // Render the folder structure
+  // };
   
 
   if (error) {
@@ -490,7 +519,7 @@ const handleLogout = () => {
             <ul>
               {files.map((file, index) => (
                 <li key={index} onClick={() => handleFileClick(file)}>
-                  <img src="/images/file.jpg" alt="File" />
+                  <img src="/images/file.png" alt="File" className="folder-icon" />
                   {file.filename}
                 </li>
               ))}
@@ -499,7 +528,8 @@ const handleLogout = () => {
             <p>No files found.</p>
           )}
           <h2>Folder Structure:</h2>
-          {folders.length > 0 ? renderFolders(folders) : <p>No folders available</p>}
+          <RenderFoldersComponent folders={folders} />
+          {/* {folders.length > 0 ? renderFolders(folders) : <p>No folders available</p>} */}
         </div>
         
         <div className="room-right">
