@@ -93,6 +93,11 @@ function GroupChat() {
     const handlePopState = () => {
       navigate(`/room/${roomId}`); // Redirect to dashboard
     };
+    const handleBeforeUnload = () => {
+      socket.emit('disconnectUser', { roomId, token: localStorage.getItem('token') });
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     window.addEventListener('popstate', handlePopState);
 
@@ -101,6 +106,7 @@ function GroupChat() {
       socket.off('onlineUsers');
       socket.off('newMessage'); // Cleanup listener on component unmount
       window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [roomId, receiverId, isGroupChat, navigate]);
 
@@ -157,6 +163,7 @@ function GroupChat() {
 
   const handleGroupHref = () => {
     setIsGroupChat(true); // Switch to group chat mode
+    setShowSidebar(false);
     navigate(`/room/${roomId}/chat`);
   };
 
@@ -216,6 +223,7 @@ function GroupChat() {
             )
           )}
         </div>
+        <hr className="styled-hr" />
         <div className={`messages ${showSidebar ? 'short' : " "}`}>
           {messages.map((message, index) => {
             const isSender = message.sender._id === userDetails._id; // Check if the message is from the current user

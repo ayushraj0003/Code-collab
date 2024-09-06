@@ -1097,7 +1097,6 @@ input {
 .member-item {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
   transition: transform 0.3s linear;
 }
 
@@ -1274,6 +1273,7 @@ input {
   cursor: pointer;
   display: flex;
   align-items: center;
+  font-size: 18px;
 }
 .sidebar {
   position: fixed;
@@ -1322,4 +1322,14 @@ input {
   /* max-width: 680px; */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   left: 10%;
+}
+
+.styled-hr {
+  border: 0; /* Remove default border */
+  height: 2px; /* Set line thickness */
+  background-color: #ccc; /* Set line color */
+  margin: 10px 0; 
+  width: 100%; /* Adjust the width */
+  margin-left: auto; /* Center align */
+  margin-right: auto; /* Center align */
 }

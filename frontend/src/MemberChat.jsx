@@ -60,7 +60,7 @@ function MemberChat({ roomId, onlineUsers, onUserClick, activeUserId }) {
                 src={user.avatar}
                 alt={`${user.name}'s avatar`}
                 className="avatar"
-                style={{ width: '30px', height: '30px', borderRadius: '50%', marginRight: '10px' }}
+                style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '10px' }}
               />
             )}
             <strong>{user.name}</strong>
