@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MemberChat from './MemberChat';
 import io from 'socket.io-client';
-import { FaSignOutAlt, FaUsers } from 'react-icons/fa';
+import { FaSignOutAlt, FaUsers, FaTimes } from 'react-icons/fa';
 
 const socket = io('http://localhost:5000');
 
@@ -17,6 +17,8 @@ function GroupChat() {
   const [userDetails, setUserDetails] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isGroupChat, setIsGroupChat] = useState(!receiverId); // Determine chat mode based on receiverId
+  const [receiverDetails, setReceiverDetails] = useState(null); // Store the receiver's details in personal chat
+  const [showSidebar, setShowSidebar] = useState(false); // State to show/hide sidebar
   const messagesEndRef = useRef(null); // Ref to keep track of the end of the messages list
 
   useEffect(() => {
@@ -29,6 +31,19 @@ function GroupChat() {
         setUserDetails(response.data);
       } catch (err) {
         console.error('Failed to fetch user details', err);
+      }
+    };
+
+    const fetchReceiverDetails = async () => {
+      if (!receiverId) return;
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://localhost:5000/api/auth/userdetail/${receiverId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setReceiverDetails(response.data);
+      } catch (err) {
+        console.error('Failed to fetch receiver details', err);
       }
     };
 
@@ -72,9 +87,9 @@ function GroupChat() {
     });
 
     fetchUserDetails();
+    fetchReceiverDetails();
     fetchMessages();
 
-    // Handle back button or any navigation
     const handlePopState = () => {
       navigate(`/room/${roomId}`); // Redirect to dashboard
     };
@@ -128,7 +143,6 @@ function GroupChat() {
       // Emit the new message to the server so it can be broadcasted
       socket.emit('sendMessage', { newMsg, roomId });
 
-      // Do NOT update messages locally here; it will be updated via socket event
       setNewMessage(''); // Clear the input after sending
     } catch (err) {
       console.error('Failed to send message', err);
@@ -149,6 +163,10 @@ function GroupChat() {
   const handlePersonalChat = (userId) => {
     setIsGroupChat(false); // Switch to personal chat mode
     navigate(`/room/${roomId}/chat`, { state: { userId } }); // Pass the receiverId through state
+  };
+
+  const toggleSidebar = () => {
+    setShowSidebar((prevShowSidebar) => !prevShowSidebar);
   };
 
   if (!userDetails) {
@@ -177,6 +195,27 @@ function GroupChat() {
         </div>
       </div>
       <div className="main-content">
+        <div className="chat-header">
+          {isGroupChat ? (
+            <h2>Group Chat</h2>
+          ) : (
+            receiverDetails && (
+              <div
+                className="receiver-info"
+                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                onClick={toggleSidebar} // Open sidebar on avatar click
+              >
+                <img
+                  src={receiverDetails.avatar}
+                  alt={`${receiverDetails.name}'s avatar`}
+                  className="avatar"
+                  style={{ width: '40px', height: '40px', borderRadius: '50%', marginRight: '8px' }}
+                />
+                <h2>{receiverDetails.name}</h2>
+              </div>
+            )
+          )}
+        </div>
         <div className="messages">
           {messages.map((message, index) => {
             const isSender = message.sender._id === userDetails._id; // Check if the message is from the current user
@@ -205,23 +244,39 @@ function GroupChat() {
               </div>
             );
           })}
-          <div ref={messagesEndRef} /> {/* Scroll to this element */}
+          <div ref={messagesEndRef}></div>
         </div>
         <div className="txt-box">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSendMessage();
-              }
+            placeholder="Type a message"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') handleSendMessage();
             }}
           />
           <button onClick={handleSendMessage}>Send</button>
         </div>
       </div>
+      {showSidebar && receiverDetails && (
+        <div className="sidebar">
+          <button className="close-sidebar" onClick={toggleSidebar}>
+            <FaTimes /> Close
+          </button>
+          <div className="user-details">
+            <img
+              src={receiverDetails.avatar}
+              alt={`${receiverDetails.name}'s avatar`}
+              className="avatar-large"
+              style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+            />
+            <h3>{receiverDetails.name}</h3>
+            <p>Email: {receiverDetails.email}</p>
+            <p>Contact:{receiverDetails.mobile}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

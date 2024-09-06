@@ -1274,3 +1274,32 @@ input {
   display: flex;
   align-items: center;
 }
+.sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 300px;
+  height: 100%;
+  background-color: white;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  z-index: 1000;
+  transform: translateX(0); /* Slide-in animation */
+  transition: transform 0.3s ease-in-out;
+}
+
+.close-sidebar {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.avatar-large {
+  display: block;
+  margin: 0 auto;
+}
+
+.user-details {
+  text-align: center;
+}
