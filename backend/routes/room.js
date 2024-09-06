@@ -267,32 +267,51 @@ router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
   try {
     const { roomId, filename } = req.params;
 
-    // Find the room by roomId and file by filename
-    const room = await Room.findOne({ roomId, 'files.filename': filename })
+    // Find the room by roomId
+    const room = await Room.findOne({ roomId });
 
     if (!room) {
-      return res.status(404).json({ message: 'Room or file not found' });
+      return res.status(404).json({ message: 'Room not found' });
     }
 
-    const file = room.files.find(file => file.filename === filename);
+    // Helper function to recursively search for the file in folders and subfolders
+    const findFileInFolders = (folders) => {
+      for (const folder of folders) {
+        // Search in files directly within the folder
+        const file = folder.files.find((file) => file.filename === filename);
+        if (file) return file;
+
+        // Recursively search in subfolders
+        const fileInSubfolder = findFileInFolders(folder.subfolders);
+        if (fileInSubfolder) return fileInSubfolder;
+      }
+      return null;
+    };
+
+    // Search for the file in top-level files
+    let file = room.files.find((file) => file.filename === filename);
+
+    // If not found in top-level files, search in folders
+    if (!file) {
+      file = findFileInFolders(room.folders);
+    }
+
     if (!file) {
       return res.status(404).json({ message: 'File not found' });
     }
 
-    const latestCode = file.codeHistory.length > 0 
-      ? file.codeHistory[file.codeHistory.length - 1].code 
-      : '';
+    // Fetch the latest code and author from codeHistory
+    const latestCode = file.codeHistory.length > 0 ? file.codeHistory[file.codeHistory.length - 1].code : '';
+    const latestAuth = file.codeHistory.length > 0 ? file.codeHistory[file.codeHistory.length - 1].author : '';
 
-    const auth = file.codeHistory.length > 0 
-    ? file.codeHistory[file.codeHistory.length - 1].author 
-    : '';
-
-    res.status(200).json({ content: latestCode,  latestAuth: auth});
+    // Return the file content and code history
+    res.status(200).json({ content: latestCode, latestAuth, codeHistory: file.codeHistory });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async (req, res) => {
