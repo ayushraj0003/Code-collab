@@ -13,9 +13,9 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
     }));
   };
 
-  // Handle file click and navigate to the CodeEditor page
-  const handleFileInFolderClick = (file) => {
-    navigate(`/code-editor`, { state: { file, roomId } }); // Pass file and roomId via state
+  // Handle file click and navigate to the CodeEditor page with folderPath
+  const handleFileInFolderClick = (file, folderPaths) => {
+    navigate(`/code-editor`, { state: { file, roomId, folderPaths } }); // Pass file, roomId, and folderPath via state
   };
 
   // Build the folder tree from the folder paths
@@ -66,7 +66,8 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
                   {node[folderName].files.length > 0 && (
                     <ul>
                       {node[folderName].files.map((file, fileIndex) => (
-                        <li key={fileIndex} onClick={() => handleFileInFolderClick(file)}>
+                        <li key={fileIndex} onClick={() => handleFileInFolderClick(file, fullPath)}>
+                            <p>{fullPath}</p>
                           <img src="/images/file.png" alt="File" className="folder-icon" />
                           {file.filename}
                         </li>

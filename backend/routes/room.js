@@ -700,4 +700,70 @@ router.get('/:roomId/owner', verifyToken, async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
+const findFolderRecursively = (folders, folderPaths) => {
+  if (folderPaths.length === 0) return null; // If there are no folder paths left, return null
+
+  const folderName = folderPaths[0]; // Get the current folder name
+  const nextFolders = folderPaths.slice(1); // Get the remaining folder paths
+
+  const folder = folders.find((f) => f.folderName === folderName); // Find the folder in the current level
+
+  if (!folder) return null; // If the folder is not found, return null
+
+  if (nextFolders.length === 0) {
+    // If there are no more subfolders to search, return the folder
+    return folder;
+  } else {
+    // Recursively search in the subfolders of the current folder
+    return findFolderRecursively(folder.subfolders, nextFolders);
+  }
+};
+
+// Route to commit code to a file in a room
+router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, res) => {
+  try {
+    const { roomId, paths, filename } = req.params;
+    const { code } = req.body;
+
+    console.log(roomId, paths, filename, code); // Debugging output
+
+    // Find the room by roomId
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Split the paths to find the correct folder
+    const folderPaths = paths.split('/').filter(Boolean); // Remove empty strings from paths
+
+    // Find the target folder using the recursive function
+    const targetFolder = findFolderRecursively(room.folders, folderPaths);
+
+    if (!targetFolder) {
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    // Find the file within the target folder's files array
+    const file = targetFolder.files.find((file) => file.filename === filename);
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Update the file's content
+    file.codeHistory.push({
+      code,
+      timestamp: new Date(),
+    });
+
+    // Save the room document with the updated file history
+    await room.save();
+
+    res.status(200).json({ message: 'Code committed successfully', codeHistory: file.codeHistory });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

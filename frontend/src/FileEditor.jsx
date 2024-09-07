@@ -4,12 +4,12 @@ import CodeEditor from './CodeEditor'; // Import the CodeEditor component
 
 const FileEditor = () => {
   const location = useLocation();
-  const { file, roomId } = location.state || {}; // Retrieve file data from location state
+  const { file, roomId, folderPaths } = location.state || {}; // Retrieve file data from location state
 
   const [code, setCode] = useState(''); // State for current file content
   const [codeHistory, setCodeHistory] = useState([]); // State for storing code history
   const [latestAuthor, setLatestAuthor] = useState(''); // State for displaying the latest author
-
+    // console.log(folderPaths);
   useEffect(() => {
     if (file) {
       // Fetch file content from the server or load it directly if passed
@@ -41,7 +41,7 @@ const FileEditor = () => {
     <div>
       <h2>{file?.filename}</h2>
       {latestAuthor && <p>Last edited by: {latestAuthor}</p>}
-      <CodeEditor code={code} onCodeChange={handleCodeChange} roomId={roomId} />
+      <CodeEditor code={code} onCodeChange={handleCodeChange} roomId={roomId} filename={file.filename} folderPaths={folderPaths} />
       
       {/* Display Code History */}
       <div>

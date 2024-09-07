@@ -9,7 +9,7 @@ import io from 'socket.io-client';
 
 const socket = io('http://localhost:5000'); // Initialize socket outside component to avoid multiple connections
 
-const CodeEditor = ({ code, onCodeChange, roomId }) => {
+const CodeEditor = ({ code, onCodeChange, roomId, filename, folderPaths }) => {
   const [language, setLanguage] = useState('javascript');
   const [typingUsers, setTypingUsers] = useState({});
 
@@ -58,6 +58,32 @@ const CodeEditor = ({ code, onCodeChange, roomId }) => {
     socket.emit('typing', { roomId, lineNumber, username });
   };
 
+  const handleCommit = async () => {
+    const token = localStorage.getItem('token');
+    // const username = localStorage.getItem('username') || 'Unknown User';
+    // console.log(username);
+    try {
+      const paths= folderPaths ? folderPaths  : ''
+      const response = await fetch(`http://localhost:5000/api/rooms/${roomId}/file/${paths}/${filename}/commit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code}),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Code committed successfully!');
+      } else {
+        alert(`Error committing code: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error committing code:', error);
+    }
+  };
+
   return (
     <div className="code-editor-container">
       <select onChange={handleLanguageChange} value={language}>
@@ -77,6 +103,8 @@ const CodeEditor = ({ code, onCodeChange, roomId }) => {
         onBeforeChange={handleCodeChange}
         onCursorActivity={handleCursorActivity}
       />
+
+      <button onClick={handleCommit}>Commit Code</button> {/* Add Commit button */}
 
       <div className="typing-indicators">
         {Object.keys(typingUsers).map((lineNumber) => (
