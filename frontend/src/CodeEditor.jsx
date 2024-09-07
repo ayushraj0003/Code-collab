@@ -64,14 +64,19 @@ const CodeEditor = ({ code, onCodeChange, roomId, filename, folderPaths }) => {
     // console.log(username);
     try {
       const paths= folderPaths ? folderPaths  : ''
-      const response = await fetch(`http://localhost:5000/api/rooms/${roomId}/file/${paths}/${filename}/commit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code}),
-      });
+      const username = "New User";
+      const response = await fetch(
+        `http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(paths)}/${filename}/commit`, 
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ code, author: username }),
+        }
+      );
+      
 
       const data = await response.json();
       if (response.ok) {

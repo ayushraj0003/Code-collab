@@ -701,54 +701,43 @@ router.get('/:roomId/owner', verifyToken, async (req, res) => {
   }
 });
 
-const findFolderRecursively = (folders, folderPaths) => {
-  if (folderPaths.length === 0) return null; // If there are no folder paths left, return null
-
-  const folderName = folderPaths[0]; // Get the current folder name
-  const nextFolders = folderPaths.slice(1); // Get the remaining folder paths
-
-  const folder = folders.find((f) => f.folderName === folderName); // Find the folder in the current level
-
-  if (!folder) return null; // If the folder is not found, return null
-
-  if (nextFolders.length === 0) {
-    // If there are no more subfolders to search, return the folder
-    return folder;
-  } else {
-    // Recursively search in the subfolders of the current folder
-    return findFolderRecursively(folder.subfolders, nextFolders);
-  }
-};
-
-// Route to commit code to a file in a room
 router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, res) => {
   try {
-    const { roomId, paths, filename } = req.params;
+    console.log("Starting commit process...");
+    const { roomId, filename } = req.params;
+    const paths = decodeURIComponent(req.params.paths);
     const { code } = req.body;
-
-    console.log(roomId, paths, filename, code); // Debugging output
+    console.log(`Room ID: ${roomId}, Paths: ${paths}, Filename: ${filename}, Code: ${code}`);
 
     // Find the room by roomId
     const room = await Room.findOne({ roomId });
     if (!room) {
+      console.log('Room not found.');
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Split the paths to find the correct folder
+    // Split the paths and find the correct folder
     const folderPaths = paths.split('/').filter(Boolean); // Remove empty strings from paths
+    let currentFolder = room.folders;
+    let folder;
 
-    // Find the target folder using the recursive function
-    const targetFolder = findFolderRecursively(room.folders, folderPaths);
-
-    if (!targetFolder) {
-      return res.status(404).json({ message: 'Folder not found' });
+    for (const folderName of folderPaths) {
+      folder = currentFolder.find((f) => f.folderName === folderName);
+      if (!folder) {
+        return res.status(404).json({ message: 'Folder not found' });
+      }
     }
 
-    // Find the file within the target folder's files array
-    const file = targetFolder.files.find((file) => file.filename === filename);
+    console.log('Target folder found:', folder);
+
+    // Find the file within the found folder
+    const file = folder.files.find((file) => file.filename === filename);
     if (!file) {
+      console.log(`File "${filename}" not found in folder "${folder.folderName}".`);
       return res.status(404).json({ message: 'File not found' });
     }
+
+    console.log('File found:', file.filename);
 
     // Update the file's content
     file.codeHistory.push({
@@ -761,9 +750,10 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
 
     res.status(200).json({ message: 'Code committed successfully', codeHistory: file.codeHistory });
   } catch (error) {
-    console.error(error);
+    console.error('Error during commit:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 module.exports = router;
