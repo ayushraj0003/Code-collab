@@ -67,7 +67,7 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
                     <ul>
                       {node[folderName].files.map((file, fileIndex) => (
                         <li key={fileIndex} onClick={() => handleFileInFolderClick(file, fullPath)}>
-                            <p>{fullPath}</p>
+                            
                           <img src="/images/file.png" alt="File" className="folder-icon" />
                           {file.filename}
                         </li>

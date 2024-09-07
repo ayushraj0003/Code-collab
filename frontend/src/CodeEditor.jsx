@@ -64,7 +64,7 @@ const CodeEditor = ({ code, onCodeChange, roomId, filename, folderPaths }) => {
     // console.log(username);
     try {
       const paths= folderPaths ? folderPaths  : ''
-      const username = "New User";
+ 
       const response = await fetch(
         `http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(paths)}/${filename}/commit`, 
         {
@@ -73,7 +73,7 @@ const CodeEditor = ({ code, onCodeChange, roomId, filename, folderPaths }) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ code, author: username }),
+          body: JSON.stringify({ code }),
         }
       );
       

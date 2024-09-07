@@ -263,9 +263,10 @@ router.get('/:roomId', verifyToken, async (req, res) => {
 });
 
 
-router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
+router.get('/:roomId/file/:path/:filename', verifyToken, async (req, res) => {
   try {
     const { roomId, filename } = req.params;
+    const paths = decodeURIComponent(req.params.path);
 
     // Find the room by roomId
     const room = await Room.findOne({ roomId });
@@ -273,32 +274,26 @@ router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
+    const folderPaths = paths.split('/').filter(Boolean); // Remove empty strings from paths
+    let currentFolder = room.folders;
+    let folder;
 
-    // Helper function to recursively search for the file in folders and subfolders
-    const findFileInFolders = (folders) => {
-      for (const folder of folders) {
-        // Search in files directly within the folder
-        const file = folder.files.find((file) => file.filename === filename);
-        if (file) return file;
-
-        // Recursively search in subfolders
-        const fileInSubfolder = findFileInFolders(folder.subfolders);
-        if (fileInSubfolder) return fileInSubfolder;
+    for (const folderName of folderPaths) {
+      folder = currentFolder.find((f) => f.folderName === folderName);
+      if (!folder) {
+        return res.status(404).json({ message: 'Folder not found' });
       }
-      return null;
-    };
-
-    // Search for the file in top-level files
-    let file = room.files.find((file) => file.filename === filename);
-
-    // If not found in top-level files, search in folders
-    if (!file) {
-      file = findFileInFolders(room.folders);
     }
 
+    console.log('Target folder found:', folder);
+
+    // Find the file within the found folder
+    const file = folder.files.find((file) => file.filename === filename);
     if (!file) {
+      console.log(`File "${filename}" not found in folder "${folder.folderName}".`);
       return res.status(404).json({ message: 'File not found' });
     }
+
 
     // Fetch the latest code and author from codeHistory
     const latestCode = file.codeHistory.length > 0 ? file.codeHistory[file.codeHistory.length - 1].code : '';
@@ -311,7 +306,6 @@ router.get('/:roomId/file/:filename', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 
 router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async (req, res) => {
@@ -703,6 +697,7 @@ router.get('/:roomId/owner', verifyToken, async (req, res) => {
 
 router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, res) => {
   try {
+    const author =req.user.userId;
     console.log("Starting commit process...");
     const { roomId, filename } = req.params;
     const paths = decodeURIComponent(req.params.paths);
@@ -742,7 +737,9 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
     // Update the file's content
     file.codeHistory.push({
       code,
+      
       timestamp: new Date(),
+      author
     });
 
     // Save the room document with the updated file history
