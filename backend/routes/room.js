@@ -711,17 +711,14 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    // Split the paths and find the correct folder
-    const folderPaths = paths.split('/').filter(Boolean); // Remove empty strings from paths
-    let currentFolder = room.folders;
-    let folder;
 
-    for (const folderName of folderPaths) {
-      folder = currentFolder.find((f) => f.folderName === folderName);
-      if (!folder) {
-        return res.status(404).json({ message: 'Folder not found' });
-      }
+    const folder = room.folders.find((f) => f.path === paths);
+
+    if (!folder) {
+      console.log(`Folder with path "${folderPath}" not found.`);
+      return res.status(404).json({ message: 'Folder not found' });
     }
+
 
     console.log('Target folder found:', folder);
 
@@ -736,8 +733,7 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
 
     // Update the file's content
     file.codeHistory.push({
-      code,
-      
+      code,   
       timestamp: new Date(),
       author
     });
@@ -749,6 +745,146 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
   } catch (error) {
     console.error('Error during commit:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.delete('/:roomId/file/:folderPath/:filename', verifyToken, async (req, res) => {
+  const { roomId, filename } = req.params;
+  const folderPath = decodeURIComponent(req.params.folderPath); // Full folder path
+  console.log(roomId, filename, folderPath);
+
+  try {
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      console.log('Room not found.');
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Find the folder using the full folder path
+    const targetFolder = room.folders.find((f) => f.path === folderPath);
+
+    if (!targetFolder) {
+      console.log(`Folder with path "${folderPath}" not found.`);
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    console.log('Target folder found:', targetFolder);
+
+    // Find the file in the target folder
+    const fileIndex = targetFolder.files.findIndex((file) => file.filename === filename);
+    if (fileIndex === -1) {
+      console.log(`File "${filename}" not found in folder "${targetFolder.folderName}".`);
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    console.log('File found:', targetFolder.files[fileIndex].filename);
+
+    // Delete the file from the files array
+    targetFolder.files.splice(fileIndex, 1);
+
+    // Save the updated room document
+    await room.save();
+
+    console.log(`File "${filename}" deleted successfully.`);
+    res.status(200).send({ message: 'File deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).json({ message: 'An error occurred while deleting the file.' });
+  }
+});
+
+router.post('/move-file', async (req, res) => {
+  const { roomId, fileId, oldFolderPath, newFolderPath } = req.body;
+  console.log("Move File Request:", oldFolderPath, newFolderPath, roomId, fileId);
+  
+  try {
+    // Find the room by roomId
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      console.log('Room not found.');
+      return res.status(404).json({ message: 'Room not found' });
+    }
+    console.log(room)
+    console.log(room.folders )
+    // Function to find the folder by its path (no subfolders considered)
+    const findFolder = (folderName, folders) => {
+      return folders.find((f) => f.path=== folderName);
+    };
+
+    // Find the old folder and remove the file from there
+    const oldFolder = findFolder(oldFolderPath, room.folders);
+    console.log(oldFolder)
+    if (!oldFolder) {
+      console.log(`Old folder "${oldFolderPath}" not found.`);
+      return res.status(404).json({ message: 'Old folder not found' });
+    }
+
+    const fileIndex = oldFolder.files.findIndex((file) => file._id.toString() === fileId);
+    if (fileIndex === -1) {
+      console.log('File not found in the old folder.');
+      return res.status(404).json({ message: 'File not found in old folder' });
+    }
+
+    const [file] = oldFolder.files.splice(fileIndex, 1); // Remove the file
+
+    // Find the new folder and add the file there
+    const newFolder = findFolder(newFolderPath, room.folders);
+    if (!newFolder) {
+      console.log(`New folder "${newFolderPath}" not found.`);
+      return res.status(404).json({ message: 'New folder not found' });
+    }
+
+    newFolder.files.push(file); // Add the file to the new folder
+
+    // Save the room document
+    await room.save();
+
+    res.status(200).json({ message: 'File moved successfully' });
+  } catch (error) {
+    console.error('Error moving file:', error);
+    res.status(500).json({ error: 'Error moving file' });
+  }
+});
+
+router.delete('/:roomId/folder/:folderPath', verifyToken, async (req, res) => {
+  const { roomId } = req.params;
+  const folderPath = decodeURIComponent(req.params.folderPath); // Full folder path
+
+  try {
+    // Find the room
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      console.log('Room not found.');
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Filter out folders to delete
+    const foldersToDelete = new Set(); // To store the paths of folders to delete
+    const remainingFolders = room.folders.filter(folder => {
+      if (folder.path.startsWith(folderPath)) {
+        foldersToDelete.add(folder.path);
+        return false; // Remove this folder
+      }
+      return true; // Keep this folder
+    });
+
+    if (foldersToDelete.size === 0) {
+      console.log(`Folder with path "${folderPath}" not found.`);
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    // Update the room's folders list
+    room.folders = remainingFolders;
+
+    // Save the updated room document
+    await room.save();
+
+    console.log('Folder and its subfolders deleted successfully.');
+    res.status(200).json({ message: 'Folder and its subfolders deleted successfully' });
+
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
