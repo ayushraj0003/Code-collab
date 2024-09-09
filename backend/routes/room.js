@@ -888,5 +888,73 @@ router.delete('/:roomId/folder/:folderPath', verifyToken, async (req, res) => {
   }
 });
 
+// Renaming a file
+router.put('/:roomId/file/:folderPath', async (req, res) => {
+  try {
+    const { roomId, folderPath } = req.params;
+    const { newName } = req.body;
+
+    // Find and rename the file in the database
+    const result = await File.updateOne(
+      { roomId, path: folderPath, filename: req.body.currentName },
+      { $set: { filename: newName } }
+    );
+
+    if (result.nModified === 0) {
+      return res.status(404).send('File not found');
+    }
+
+    res.send('File renamed successfully');
+  } catch (error) {
+    res.status(500).send('Server error');
+  }
+});
+
+router.put('/:roomId/folder/:folderPath', async (req, res) => {
+  try {
+    const { roomId, folderPath } = req.params;
+    const { newName } = req.body;
+
+    // Decode folderPath to handle URL encoding
+    const decodedFolderPath = decodeURIComponent(folderPath);
+
+    // Find the room
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      return res.status(404).send('Room not found');
+    }
+
+    // Find the folder to rename
+    const folderToRename = room.folders.find(folder => folder.path === decodedFolderPath);
+    if (!folderToRename) {
+      return res.status(404).send('Folder not found');
+    }
+
+    const oldFolderName = folderToRename.folderName;
+
+    // Update the folder name
+    folderToRename.folderName = newName;
+
+    // Update paths of subfolders
+    const updatedFolders = room.folders.map(folder => {
+      if (folder.path.startsWith(decodedFolderPath)) {
+        // Update the folder path by replacing the old folder name with the new name
+        const updatedPath = folder.path.replace(`${decodedFolderPath}`, `${decodedFolderPath.replace(oldFolderName, newName)}`);
+        return { ...folder, path: updatedPath };
+      }
+      return folder;
+    });
+
+    // Save the updated room document
+    room.folders = updatedFolders;
+    await room.save();
+
+    res.send('Folder renamed successfully');
+  } catch (error) {
+    console.error('Error renaming folder:', error);
+    res.status(500).send('Server error');
+  }
+});
+
 
 module.exports = router;

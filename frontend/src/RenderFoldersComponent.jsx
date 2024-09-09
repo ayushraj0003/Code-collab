@@ -2,13 +2,39 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+// Define the buildFolderTree function before using it
+const buildFolderTree = (folders) => {
+  const tree = {};
+
+  folders.forEach((folder) => {
+    const parts = folder.path.split('/').filter(Boolean);
+    let current = tree;
+
+    parts.forEach((part, index) => {
+      if (!current[part]) {
+        current[part] = { files: [], subfolders: {} };
+      }
+
+      if (index === parts.length - 1) {
+        current[part].files = folder.files;
+        current[part].folderName = folder.folderName;
+      }
+
+      current = current[part].subfolders;
+    });
+  });
+
+  return tree;
+};
+
 const RenderFoldersComponent = ({ folders = [], roomId }) => {
   const [expandedFolders, setExpandedFolders] = useState({});
-  const [draggedFile, setDraggedFile] = useState(null); // Track the dragged file
-  const [isDropInProgress, setIsDropInProgress] = useState(false); // Prevent multiple API calls
+  const [draggedFile, setDraggedFile] = useState(null);
+  const [isDropInProgress, setIsDropInProgress] = useState(false);
+  const [folderTree, setFolderTree] = useState(buildFolderTree(folders));
+  const [editing, setEditing] = useState({ type: '', path: '', name: '' });
   const navigate = useNavigate();
 
-  // Toggle folder expansion state
   const handleFolderClick = (folderPath) => {
     setExpandedFolders((prevExpandedFolders) => ({
       ...prevExpandedFolders,
@@ -16,22 +42,18 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
     }));
   };
 
-  // Handle file drag start
   const handleFileDragStart = (file, folderPaths) => {
-    setDraggedFile({ file, folderPaths }); // Set the dragged file
+    setDraggedFile({ file, folderPaths });
   };
 
-  // Handle drop event on a folder
   const handleFolderDrop = async (e, folderPaths) => {
-    e.stopPropagation(); // Prevent the event from bubbling up to parent folders
-    e.preventDefault(); // Prevent default drop behavior
+    e.stopPropagation();
+    e.preventDefault();
 
     if (!isDropInProgress && draggedFile) {
-      setIsDropInProgress(true); // Lock the drop to prevent multiple calls
+      setIsDropInProgress(true);
 
       try {
-        // Call the backend to update the file location
-        console.log('Moving file to:', folderPaths, 'from this path', draggedFile.folderPaths);
         await axios.post(`http://localhost:5000/api/rooms/move-file`, {
           roomId,
           fileId: draggedFile.file._id,
@@ -41,10 +63,8 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
 
         console.log('File moved successfully');
 
-        // Update the folder tree state after the move
         const updatedTree = { ...folderTree };
 
-        // Remove the file from the old folder
         const removeFile = (tree, path, fileId) => {
           const parts = path.split('/').filter(Boolean);
           let current = tree;
@@ -61,7 +81,6 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
           }
         };
 
-        // Add the file to the new folder
         const addFile = (tree, path, file) => {
           const parts = path.split('/').filter(Boolean);
           let current = tree;
@@ -73,30 +92,26 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
           });
         };
 
-        // Remove the file from the old location
         removeFile(updatedTree, draggedFile.folderPaths, draggedFile.file._id);
-        // Add the file to the new location
         addFile(updatedTree, folderPaths, draggedFile.file);
 
         setFolderTree(updatedTree);
       } catch (error) {
         console.error('Error moving file:', error);
       } finally {
-        setIsDropInProgress(false); // Unlock after the drop action is complete
+        setIsDropInProgress(false);
       }
     }
 
-    setDraggedFile(null); // Clear the dragged file
+    setDraggedFile(null);
   };
 
-  // Handle file click and navigate to the CodeEditor page with folderPath
   const handleFileInFolderClick = (file, folderPaths) => {
     navigate(`/code-editor`, { state: { file, roomId, folderPaths } });
   };
 
-  // Handle file deletion
   const handleDeleteFile = async (e, file, folderPaths) => {
-    e.stopPropagation(); // Prevent the click event from bubbling up to parent elements
+    e.stopPropagation();
 
     if (window.confirm(`Are you sure you want to delete the file: ${file.filename}?`)) {
       try {
@@ -108,7 +123,6 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
           }
         );
 
-        // Update the folder tree state after deletion
         const updatedTree = { ...folderTree };
         const paths = folderPaths.split('/').filter(Boolean);
         let current = updatedTree;
@@ -137,9 +151,8 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
     }
   };
 
-  // Handle folder deletion
   const handleDeleteFolder = async (e, folderPath) => {
-    e.stopPropagation(); // Prevent the click event from bubbling up to parent elements
+    e.stopPropagation();
 
     if (window.confirm(`Are you sure you want to delete the folder: ${folderPath}?`)) {
       try {
@@ -151,10 +164,8 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
           }
         );
 
-        // Update the folder tree state after deletion
         const updatedTree = { ...folderTree };
 
-        // Function to delete folder from the tree
         const deleteFolder = (tree, path) => {
           const parts = path.split('/').filter(Boolean);
           let current = tree;
@@ -173,7 +184,6 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
           }
         };
 
-        // Delete the folder
         deleteFolder(updatedTree, folderPath);
 
         setFolderTree(updatedTree);
@@ -183,32 +193,55 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
     }
   };
 
-  // Build the folder tree from the folder paths
-  const buildFolderTree = (folders) => {
-    const tree = {};
+  const handleRename = async () => {
+    try {
+      if (editing.type === 'file') {
+        await axios.put(`http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(editing.path)}`, {
+          newName: editing.name,
+        });
+      } else if (editing.type === 'folder') {
+        await axios.put(`http://localhost:5000/api/rooms/${roomId}/folder/${encodeURIComponent(editing.path)}`, {
+          newName: editing.name,
+        });
+      }
 
-    folders.forEach((folder) => {
-      const parts = folder.path.split('/').filter(Boolean);
-      let current = tree;
+      // Update the folder tree after renaming
+      const updatedTree = { ...folderTree };
+      const rename = (tree, path, newName) => {
+        const parts = path.split('/').filter(Boolean);
+        let current = tree;
 
-      parts.forEach((part, index) => {
-        if (!current[part]) {
-          current[part] = { files: [], subfolders: {} };
+        for (let i = 0; i < parts.length - 1; i++) {
+          const part = parts[i];
+          if (!current[part]) return;
+          current = current[part].subfolders;
         }
 
-        if (index === parts.length - 1) {
-          current[part].files = folder.files;
-          current[part].folderName = folder.folderName;
+        const lastPath = parts[parts.length - 1];
+        if (current[lastPath]) {
+          if (editing.type === 'file') {
+            const file = current[lastPath].files.find((f) => f._id === editing.fileId);
+            if (file) file.filename = newName;
+          } else if (editing.type === 'folder') {
+            const subfolder = current[lastPath].subfolders;
+            current[newName] = { ...current[lastPath] };
+            delete current[lastPath];
+          }
         }
+      };
 
-        current = current[part].subfolders;
-      });
-    });
-
-    return tree;
+      rename(updatedTree, editing.path, editing.name);
+      setFolderTree(updatedTree);
+      setEditing({ type: '', path: '', name: '' });
+    } catch (error) {
+      console.error('Error renaming:', error);
+    }
   };
 
-  // Render the folder tree recursively
+  const handleStartEditing = (type, path, currentName, fileId) => {
+    setEditing({ type, path, name: currentName, fileId });
+  };
+
   const renderTree = (node, path = '') => {
     return (
       <ul>
@@ -224,8 +257,22 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
             >
               <span onClick={() => handleFolderClick(fullPath)}>
                 <img src="/images/folder.png" alt="Folder" className="folder-icon" />
-                <strong>{folderName}</strong>
-                <button onClick={(e) => handleDeleteFolder(e, fullPath)}>Delete Folder</button> {/* Add Delete Folder Button */}
+                {editing.type === 'folder' && editing.path === fullPath ? (
+                  <input
+                    type="text"
+                    value={editing.name}
+                    onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                  />
+                ) : (
+                  <strong>{folderName}</strong>
+                )}
+                <button onClick={(e) => handleDeleteFolder(e, fullPath)}>Delete Folder</button>
+                {editing.type === 'folder' && editing.path === fullPath && (
+                  <button onClick={handleRename}>Rename Folder</button>
+                )}
+                {editing.type !== 'folder' && (
+                  <button onClick={() => handleStartEditing('folder', fullPath, folderName)}>Rename Folder</button>
+                )}
               </span>
 
               {isExpanded && (
@@ -240,8 +287,22 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
                           onClick={() => handleFileInFolderClick(file, fullPath)}
                         >
                           <img src="/images/file.png" alt="File" className="folder-icon" />
-                          {file.filename}
-                          <button onClick={(e) => handleDeleteFile(e, file, fullPath)}>Delete</button> {/* Add Delete Button */}
+                          {editing.type === 'file' && editing.path === fullPath && editing.fileId === file._id ? (
+                            <input
+                              type="text"
+                              value={editing.name}
+                              onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                            />
+                          ) : (
+                            file.filename
+                          )}
+                          <button onClick={(e) => handleDeleteFile(e, file, fullPath)}>Delete</button>
+                          {editing.type === 'file' && editing.path === fullPath && editing.fileId === file._id && (
+                            <button onClick={handleRename}>Rename File</button>
+                          )}
+                          {editing.type !== 'file' && (
+                            <button onClick={() => handleStartEditing('file', fullPath, file.filename, file._id)}>Rename File</button>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -256,9 +317,8 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
     );
   };
 
-  const [folderTree, setFolderTree] = useState(buildFolderTree(folders));
-
   return <div>{renderTree(folderTree)}</div>;
 };
 
 export default RenderFoldersComponent;
+  
