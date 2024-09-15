@@ -701,7 +701,7 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
     console.log("Starting commit process...");
     const { roomId, filename } = req.params;
     const paths = decodeURIComponent(req.params.paths);
-    const { code } = req.body;
+    const { code, title } = req.body;
     console.log(`Room ID: ${roomId}, Paths: ${paths}, Filename: ${filename}, Code: ${code}`);
 
     // Find the room by roomId
@@ -733,7 +733,8 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
 
     // Update the file's content
     file.codeHistory.push({
-      code,   
+      code, 
+      title,  
       timestamp: new Date(),
       author
     });
@@ -956,5 +957,43 @@ router.put('/:roomId/folder/:folderPath', async (req, res) => {
   }
 });
 
+router.put('/:roomId/file/:folderPath/file/:fileName', async (req, res) => {
+  try {
+    const { roomId, folderPath, fileName } = req.params;
+    const { newName } = req.body;  // Change to match frontend "newName"
+
+    // Decode folderPath to handle URL encoding
+    const decodedFolderPath = decodeURIComponent(folderPath);
+
+    // Find the room
+    const room = await Room.findOne({ roomId });
+    if (!room) {
+      return res.status(404).send('Room not found');
+    }
+
+    // Find the folder by its path
+    const targetFolder = room.folders.find(folder => folder.path === decodedFolderPath);
+    if (!targetFolder) {
+      return res.status(404).send('Folder not found');
+    }
+
+    // Find the file within the folder by its name
+    const fileToRename = targetFolder.files.find(file => file.fileName === fileName);
+    if (!fileToRename) {
+      return res.status(404).send('File not found');
+    }
+
+    // Rename the file
+    fileToRename.fileName = newName;
+
+    // Save the updated room document
+    await room.save();
+
+    res.send('File renamed successfully');
+  } catch (error) {
+    console.error('Error renaming file:', error);
+    res.status(500).send('Server error');
+  }
+});
 
 module.exports = router;

@@ -196,40 +196,45 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
   const handleRename = async () => {
     try {
       if (editing.type === 'file') {
-        await axios.put(`http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(editing.path)}`, {
-          newName: editing.name,
-        });
+        await axios.put(
+          `http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(editing.path)}/file/${encodeURIComponent(editing.name)}`,
+          {
+            newName: editing.name,  // Ensure the key is `newName` to match backend
+          }
+        );
       } else if (editing.type === 'folder') {
-        await axios.put(`http://localhost:5000/api/rooms/${roomId}/folder/${encodeURIComponent(editing.path)}`, {
-          newName: editing.name,
-        });
+        await axios.put(
+          `http://localhost:5000/api/rooms/${roomId}/folder/${encodeURIComponent(editing.path)}`,
+          {
+            newName: editing.name,
+          }
+        );
       }
-
+  
       // Update the folder tree after renaming
       const updatedTree = { ...folderTree };
       const rename = (tree, path, newName) => {
         const parts = path.split('/').filter(Boolean);
         let current = tree;
-
+  
         for (let i = 0; i < parts.length - 1; i++) {
           const part = parts[i];
           if (!current[part]) return;
           current = current[part].subfolders;
         }
-
+  
         const lastPath = parts[parts.length - 1];
         if (current[lastPath]) {
           if (editing.type === 'file') {
             const file = current[lastPath].files.find((f) => f._id === editing.fileId);
             if (file) file.filename = newName;
           } else if (editing.type === 'folder') {
-            const subfolder = current[lastPath].subfolders;
             current[newName] = { ...current[lastPath] };
             delete current[lastPath];
           }
         }
       };
-
+  
       rename(updatedTree, editing.path, editing.name);
       setFolderTree(updatedTree);
       setEditing({ type: '', path: '', name: '' });
@@ -237,6 +242,7 @@ const RenderFoldersComponent = ({ folders = [], roomId }) => {
       console.error('Error renaming:', error);
     }
   };
+  
 
   const handleStartEditing = (type, path, currentName, fileId) => {
     setEditing({ type, path, name: currentName, fileId });

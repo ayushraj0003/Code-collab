@@ -6,6 +6,7 @@ const FileSchema = new mongoose.Schema({
   codeHistory: [
     {
       code: String,
+      title: String,
       timestamp: {
         type: Date,
         default: Date.now,

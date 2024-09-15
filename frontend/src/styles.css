@@ -728,7 +728,7 @@ input {
 }
 
 
-.logout-btn , .dash-btn, .profile-selections span, .logout-btn-dash{
+.logout-btn , .dash-btn, .profile-selections span, .logout-btn-dash, .commit-btn, .version{
   display: flex;
   align-items: center;
   color: white;
@@ -740,6 +740,29 @@ input {
   transition: background-color 0.3s ease;
   transition: transform 0.7s ease;
   justify-self: flex-end;
+}
+
+.commit-btn{
+  background-color: rgb(112, 161, 38);
+  transition: background-color 0.3s ease;
+  transition: transform 0.7s ease;
+}
+.commit-btn:hover{
+  background-color:green;
+  transform: scale(1.06);
+  color: black;
+}
+
+.version{
+  background-color: #1259ab;
+  transition: background-color 0.3s ease;
+  transition: transform 0.7s ease;
+}
+
+.version:hover{
+  background-color: #6d0aef;
+  color:black;
+  transform: scale(1.06);
 }
 
 .logout-btn-dash{
@@ -1334,3 +1357,184 @@ input {
   margin-right: auto; /* Center align */
 }
 
+.file-editor-container {
+  max-width: 1200px; /* Maximum width of the FileEditor container */
+  margin: 0 auto; /* Center the container */
+  padding: 20px;
+  border-radius: 8px; /* Rounded corners */
+  background-color: #f4f4f4; /* Light background color */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+
+.code-editor-container {
+  /* margin-top: 20px; Spacing above the editor */
+  /* border: 1px solid #ddd; Border around editor */
+  border-radius: 8px; 
+  /* padding: 15px; */
+  background-color: #fff; /* White background */
+  height: 100vh;
+  width: 95%;
+}
+
+.CodeMirror {
+  width: 100%; 
+  font-size: 16px;
+}
+
+.cm-s-seti.CodeMirror{
+  height: 91vh;
+  position: relative;
+  top: 9vh;
+}
+.cm-s-material.CodeMirror{
+  height: 91vh;
+  position: relative;
+  top: 9vh;
+}
+.cm-s-monokai.CodeMirror{
+  height: 91vh;
+  position: relative;
+  top: 9vh;
+}
+.cm-s-dracula.CodeMirror{
+  height: 91vh;
+  position: relative;
+  top: 9vh;
+}
+
+.code-history{
+  margin-top: 20px;
+}
+
+.editor-nav{
+  position: fixed;
+  display: flex;
+  border: none;
+  justify-content: space-;
+  align-items: center;
+  gap: 20px;
+  background-color: #5e6a80;
+  height: 9.1vh;
+  width: 100vw;
+  z-index: 1;
+  color: white;
+}
+
+#file-name{
+  /* justify-self: flex-start; */
+}
+
+.editor-sidebar{
+  display: flex;
+  width: 5%;
+  background-color: #5e6a80;
+
+}
+
+.editor-content{
+  display: flex;  
+}
+
+.CodeMirror {
+  overflow: hidden !important; /* Hide both horizontal and vertical scrollbars */
+  height: 95vh; /* Adjust height if needed */
+  width: 100%; /* Adjust width if needed */
+  z-index: 0;
+}
+
+.version-history-dropdown {
+  position:absolute; 
+  background-color: white; 
+  border: 1px solid #ccc; 
+  padding: 10px; 
+  max-height: 200px; 
+  overflow-y: auto; 
+  margin-top: 21vh;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+  left: 54vw;
+  /* width: 100px; */
+}
+
+.version-history-dropdown ul {
+  list-style: none; /* Remove list style */
+  padding: 0;
+  margin: 0; 
+}
+
+.version-history-dropdown li {
+  margin-bottom: 5px; 
+}
+
+.version-history-dropdown button {
+  background: none; /* Transparent background */
+  border: none; /* Remove border */
+  padding: 5px; /* Padding for better touch target */
+  width: 100%; /* Full width */
+  text-align: left; /* Align text to the left */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+.version-history-dropdown button:hover {
+  background-color: #f0f0f0; /* Hover effect */
+}
+
+.editor-container{
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Modal background overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Dim the background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it appears on top */
+}
+
+/* Modal content */
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  width: 400px;
+  max-width: 90%;
+}
+
+/* Close icon (cross) */
+.close-icon {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.theme-toggle {
+  margin-bottom: 10px;
+}
+
+.theme-toggle button {
+  padding: 5px 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.theme-toggle button:hover {
+  background-color: #45a049;
+}
+
+.theme-toggle p {
+  margin-left: 10px;
+  display: inline;
+}

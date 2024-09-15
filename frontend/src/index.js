@@ -7,6 +7,7 @@ import VideoCallPage from './VideoCallPage';
 import AppComponent from './Components/App';
 import GroupChat from './GroupChat';
 import FileEditor from './FileEditor';
+import Handler from './Handler';
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/room/:roomId/video-call" element={<VideoCallPage/>} />
         <Route path="/room/:roomId/chat" element={<GroupChat />} />
         <Route path="/code-editor" element={<FileEditor />} />
+        <Route path="/homepage" element={<Handler/>}/>
       </Routes>
     </Router>
   );
