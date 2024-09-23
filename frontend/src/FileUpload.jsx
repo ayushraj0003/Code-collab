@@ -74,7 +74,7 @@ function FileUpload({ roomId }) {
   };
 
   return (
-    <div>
+    <div  style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
       <h3>Upload Folder</h3>
       <input
         type="file"

@@ -742,6 +742,18 @@ input {
   justify-self: flex-end;
 }
 
+#group-chat{
+  background-color: #14c51f;
+  font-weight: bold;
+  width: 100px;
+  height: 50px;
+}
+#group-chat:hover{
+  background-color: #0b9715;
+  transform: scale(1.13);
+  color: black;
+}
+
 .commit-btn{
   background-color: rgb(112, 161, 38);
   transition: background-color 0.3s ease;
@@ -1538,3 +1550,47 @@ input {
   margin-left: 10px;
   display: inline;
 }
+
+.editor-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+
+.theme-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  transition: background-color 0.3s;
+  z-index: 1;
+}
+
+.theme-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* Hover effect */
+}
+
+.theme-icon {
+  width: 24px;
+  height: 24px;
+  background-size: cover;
+  display: inline-block;
+}
+
+.theme-text {
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;  
+  position: absolute;
+  left: -100px;
+  white-space: nowrap;
+}
+
+.theme-btn:hover .theme-text {
+  opacity: 1;
+  transform: translateX(-10px); /* Slide-in effect on hover */
+}
+

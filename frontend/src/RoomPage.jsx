@@ -3,9 +3,8 @@ import axios from 'axios';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FaSignOutAlt, FaTrashAlt } from 'react-icons/fa';
 import io from 'socket.io-client';
-import CodeEditor from './CodeEditor';
 import FileUpload from './FileUpload';
-import Loader from './Loader'; // Import the Loader component
+import Loader from './Loader'; 
 import TransferOwnershipModal from './TransferOwnershipModel';
 import './styles.css';
 import './design.css';
@@ -23,7 +22,6 @@ const RoomPage = () => {
   const [folders, setFolders] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [authorName, setAuthorName] = useState(null);
-  const [repoUrl, setRepoUrl] = useState('');
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true); // State for loading
   const [isModalOpen, setIsModalOpen] = useState(false);  
@@ -50,11 +48,6 @@ const RoomPage = () => {
         
         const names = users.map(user => ({ id: user._id, name: user.name })); // Extract user names
         setUserNames(names); 
-        
-        // setowner(response.data.roomowner)
-       
-   
-
         const userResponse = await axios.get('http://localhost:5000/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -108,23 +101,7 @@ const RoomPage = () => {
     };
 
   }, [roomId],[files],[folders]);
-  // const handleDeleteRoom = async () => {
-  //   if (window.confirm('Are you sure you want to delete this room?')) {
-  //     try {
-  //       const token = localStorage.getItem('token');
-  //       console.log(token);
-  //       await axios.delete(`http://localhost:5000/api/rooms/delete/${roomId}`, {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  
-  //       alert('Room deleted successfully');
-  //       navigate('/'); // Redirect to the home or another page after deletion
-  //     } catch (err) {
-  //       alert('Failed to delete the room');
-  //     }
-  //   }
-  // };
-  
+ 
   useEffect(() => {
     console.log("Updated online users:", onlineUsers);
   }, [onlineUsers]);
@@ -132,56 +109,6 @@ const RoomPage = () => {
   const handleCodeChange = (newCode) => {
     setCode(newCode);
     socket.emit('codeChange', { roomId, code: newCode });
-  };
-
-  const handleCommitChanges = async () => {
-    if (!selectedFile) {
-      alert('Please select a file to commit changes.');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      if (selectedFile.folderPath) {
-        const cleanedFolderPath = selectedFile.folderPath.startsWith('/') ? selectedFile.folderPath.slice(1) : selectedFile.folderPath;
-        await axios.post(
-          `http://localhost:5000/api/rooms/${roomId}/commit-folder-file`,
-          {
-            folderPath: cleanedFolderPath,
-            filename: selectedFile.filename,
-            newContent: code,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        await axios.post(
-          `http://localhost:5000/api/rooms/${roomId}/commit`,
-          { filename: selectedFile.filename, newContent: code },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
-
-      alert('Code committed successfully!');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleRepoUrlSubmit = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`http://localhost:5000/api/rooms/${roomId}/github-upload`, {
-        repoUrl,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setFiles(response.data.files);
-      setFolders(response.data.folders);
-      alert('Files uploaded successfully from GitHub repository!');
-    } catch (err) {
-      alert('Failed to upload files from GitHub repository.');
-    }
   };
 
   const handleFileClick = async (file) => {
@@ -248,93 +175,7 @@ const RoomPage = () => {
     }
   };
    
- 
-  const handleVideoCall = () => {
-    navigate(`/room/${roomId}/video-call`);
-  };
 
-  // const RenderFoldersComponent = ({ folders }) => {
-  //   const [expandedFolders, setExpandedFolders] = useState({});
-  
-  //   // Toggle folder expansion state
-  //   const handleFolderClick = (folderPath) => {
-  //     setExpandedFolders((prevExpandedFolders) => ({
-  //       ...prevExpandedFolders,
-  //       [folderPath]: !prevExpandedFolders[folderPath], // Toggle the expansion state
-  //     }));
-  //   };
-  
-  //   // Build the folder tree from the folder paths
-  //   const buildFolderTree = (folders) => {
-  //     const tree = {};
-  
-  //     folders.forEach((folder) => {
-  //       const parts = folder.path.split('/').filter(Boolean); // Split path into parts
-  //       let current = tree;
-  
-  //       parts.forEach((part, index) => {
-  //         if (!current[part]) {
-  //           current[part] = { files: [], subfolders: {} };
-  //         }
-  
-  //         if (index === parts.length - 1) {
-  //           current[part].files = folder.files; // Assign files to the last part of the path
-  //           current[part].folderName = folder.folderName; // Assign folder name
-  //         }
-  
-  //         current = current[part].subfolders; // Move to the next subfolder level
-  //       });
-  //     });
-  
-  //     return tree;
-  //   };
-  
-  //   // Render the folder tree recursively
-  //   const renderTree = (node, path = '') => {
-  //     return (
-  //       <ul>
-  //         {Object.keys(node).map((folderName, index) => {
-  //           const fullPath = `${path}/${folderName}`.replace(/^\/+/, ''); // Full path to the folder
-  //           const isExpanded = expandedFolders[fullPath]; // Check if the folder is expanded
-  
-  //           return (
-  //             <li key={index}>
-  //               {/* Folder Click Handler */}
-  //               <span onClick={() => handleFolderClick(fullPath)}>
-  //                 <img src="/images/folder.png" alt="Folder" className="folder-icon" />
-  //                 <strong>{folderName}</strong>
-  //               </span>
-  
-  //               {/* Render Subfolders and Files if Folder is Expanded */}
-  //               {isExpanded && (
-  //                 <>
-  //                   {/* Render Files in the Current Folder */}
-  //                   {node[folderName].files.length > 0 && (
-  //                     <ul>
-  //                       {node[folderName].files.map((file, fileIndex) => (
-  //                         <li key={fileIndex} onClick={() => handleFileInFolderClick(file, fullPath)}>
-  //                           <img src="/images/file.png" alt="File" className="folder-icon" />
-  //                           {file.filename}
-  //                         </li>
-  //                       ))}
-  //                     </ul>
-  //                   )}
-  
-  //                   {/* Recursively Render Subfolders */}
-  //                   {renderTree(node[folderName].subfolders, fullPath)}
-  //                 </>
-  //               )}
-  //             </li>
-  //           );
-  //         })}
-  //       </ul>
-  //     );
-  //   };
-  
-  //   const folderTree = buildFolderTree(folders); // Build the folder tree from the provided data
-  //   // return <div>{renderTree(folderTree)}</div>; // Render the folder structure
-  // };
-  
 
   if (error) {
     return <p>Error: {error}</p>;
@@ -430,8 +271,6 @@ const handleLogout = () => {
     }
   };
   const handleUserClick = (user) => {
-    // Logic to handle user click, e.g., show user profile
-    // alert(`User clicked: ${user.name}`);
   };
 
   const headtoDashboard = () =>{
@@ -529,31 +368,12 @@ const handleLogout = () => {
           )}
           <h2>Folder Structure:</h2>
           <RenderFoldersComponent folders={folders} roomId={roomId}/>
-          {/* {folders.length > 0 ? renderFolders(folders) : <p>No folders available</p>} */}
         </div>
-        
         <div className="room-right">
-          <button onClick={handleCommitChanges}>Commit Changes</button>
-
-          <h2>Upload Folder</h2>
           <FileUpload roomId={roomId} />
-          <p>{authorName ? `Last Edited by: ${authorName}` : 'No recent edits'}</p>
-          <button onClick={handleVideoCall}>Start Video Call</button>
-          <div className="github-repo-upload">
-            <h2>Upload Files from GitHub</h2>
-            <input 
-              type="text" 
-              placeholder="Enter GitHub repo URL" 
-              value={repoUrl} 
-              onChange={(e) => setRepoUrl(e.target.value)} 
-            />
-            <button onClick={handleRepoUrlSubmit}>Upload from GitHub</button>
-            
-              
-            <button onClick={handleGroupChatRedirect}>
-          Go to Group Chat
-        </button>
-          </div>
+            <button id="group-chat" onClick={handleGroupChatRedirect}>
+          Chat
+          </button>
         </div>
       </div>
     </div>

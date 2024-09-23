@@ -8,6 +8,7 @@ import AppComponent from './Components/App';
 import GroupChat from './GroupChat';
 import FileEditor from './FileEditor';
 import Handler from './Handler';
+import ThreadsLanding from './Components/ThreadsLanding';
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/room/:roomId/chat" element={<GroupChat />} />
         <Route path="/code-editor" element={<FileEditor />} />
         <Route path="/homepage" element={<Handler/>}/>
+        <Route path="/home" element={<ThreadsLanding/>}/>
       </Routes>
     </Router>
   );
