@@ -747,6 +747,8 @@ input {
   font-weight: bold;
   width: 100px;
   height: 50px;
+  transition: background-color 0.3s ease;
+  transition: transform 0.7s ease;
 }
 #group-chat:hover{
   background-color: #0b9715;
@@ -1433,9 +1435,7 @@ input {
   color: white;
 }
 
-#file-name{
-  /* justify-self: flex-start; */
-}
+
 
 .editor-sidebar{
   display: flex;
