@@ -8,7 +8,9 @@ import 'codemirror/theme/seti.css';
 import 'codemirror/mode/javascript/javascript';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:5000'); // Initialize socket outside component to avoid multiple connections
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+const socket = io('${API_URL}'); // Initialize socket outside component to avoid multiple connections
 
 const CodeEditor = ({ code, onCodeChange, roomId, filename, folderPaths, theme }) => {
   const [typingUsers, setTypingUsers] = useState({});

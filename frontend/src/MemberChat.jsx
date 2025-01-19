@@ -9,11 +9,13 @@ function MemberChat({ roomId, onlineUsers, onUserClick, activeUserId }) {
   const [activeMenuUserId, setActiveMenuUserId] = useState(null); // Track the active user
   const navigate = useNavigate();
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/auth/details', {
+        const response = await axios.get('${API_URL}/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCurrentUser(response.data);
@@ -25,7 +27,7 @@ function MemberChat({ roomId, onlineUsers, onUserClick, activeUserId }) {
     const fetchRoomDetails = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}`, {
+        const response = await axios.get(`${API_URL}/api/rooms/${roomId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(response.data.users);

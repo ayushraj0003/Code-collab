@@ -23,6 +23,9 @@ function Signup() {
     "/images/avatar8.jpg",
   ];
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+  const API_FRONT = process.env.REACT_APP_FRONTEND_URL
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData({
@@ -42,11 +45,11 @@ function Signup() {
     event.preventDefault();
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const response = await axios.post('${API_URL}/api/auth/register', formData);
       console.log(response);
       const token = response.data.token;
       localStorage.setItem('token', token);
-      window.location.href = 'http://localhost:3000/dashboard';
+      window.location.href = '${API_FRONT}/dashboard';
     } catch (error) {
       console.error('There was an error registering: ', error.response.data);
     }

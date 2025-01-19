@@ -5,7 +5,9 @@ import MemberChat from './MemberChat';
 import io from 'socket.io-client';
 import { FaSignOutAlt, FaUsers, FaTimes } from 'react-icons/fa';
 
-const socket = io('http://localhost:5000');
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+const socket = io('${API_URL}');
 
 function GroupChat() {
   const { roomId } = useParams();
@@ -25,7 +27,7 @@ function GroupChat() {
     const fetchUserDetails = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/auth/details', {
+        const response = await axios.get('${API_URL}/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserDetails(response.data);
@@ -38,7 +40,7 @@ function GroupChat() {
       if (!receiverId) return;
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5000/api/auth/userdetail/${receiverId}`, {
+        const response = await axios.get(`${API_URL}/api/auth/userdetail/${receiverId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReceiverDetails(response.data);
@@ -51,8 +53,8 @@ function GroupChat() {
       try {
         const token = localStorage.getItem('token');
         const endpoint = isGroupChat
-          ? `http://localhost:5000/api/chat/${roomId}`
-          : `http://localhost:5000/api/chat/${roomId}/personal/${receiverId}`;
+          ? `${API_URL}/api/chat/${roomId}`
+          : `${API_URL}/api/chat/${roomId}/personal/${receiverId}`;
 
         const response = await axios.get(endpoint, {
           headers: { Authorization: `Bearer ${token}` },
@@ -123,8 +125,8 @@ function GroupChat() {
     try {
       const token = localStorage.getItem('token');
       const endpoint = isGroupChat
-        ? `http://localhost:5000/api/chat/${roomId}`
-        : `http://localhost:5000/api/chat/${roomId}/personal/${receiverId}`;
+        ? `${API_URL}/api/chat/${roomId}`
+        : `${API_URL}/api/chat/${roomId}/personal/${receiverId}`;
 
       const response = await axios.post(
         endpoint,

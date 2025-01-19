@@ -37,13 +37,15 @@ const FileEditor = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('seti');
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
   useEffect(() => {
     if (file) {
       const fetchFileContent = async () => {
         try {
           const token = localStorage.getItem('token');
           const response = await axios.get(
-            `http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(folderPaths)}/${file.filename}`,
+            `${API_URL}/api/rooms/${roomId}/file/${encodeURIComponent(folderPaths)}/${file.filename}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -68,7 +70,7 @@ const FileEditor = () => {
     if (latestAuthor) {
       const fetchUserName = async () => {
         try {
-          const userResponse = await axios.get(`http://localhost:5000/api/auth/${latestAuthor}`);
+          const userResponse = await axios.get(`${API_URL}/api/auth/${latestAuthor}`);
           setUsername(userResponse.data.name);
         } catch (error) {
           console.error('Error fetching user name:', error);
@@ -106,7 +108,7 @@ const FileEditor = () => {
     try {
       const paths = folderPaths ? folderPaths : '';
       const response = await fetch(
-        `http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(paths)}/${file.filename}/commit`,
+        `${API_URL}/api/rooms/${roomId}/file/${encodeURIComponent(paths)}/${file.filename}/commit`,
         {
           method: 'POST',
           headers: {

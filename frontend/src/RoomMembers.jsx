@@ -9,11 +9,13 @@ function RoomMembers({ roomId, onlineUsers}) {
   const [activeMenuUserId, setActiveMenuUserId] = useState(null); 
   const navigate = useNavigate(); 
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/auth/details', {
+        const response = await axios.get('${API_URL}/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCurrentUser(response.data);
@@ -25,7 +27,7 @@ function RoomMembers({ roomId, onlineUsers}) {
     const fetchRoomDetails = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}`, {
+        const response = await axios.get(`${API_URL}/api/rooms/${roomId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers(response.data.users);
@@ -46,7 +48,7 @@ function RoomMembers({ roomId, onlineUsers}) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/rooms/${roomId}/remove-user/${userId}`, {
+      await axios.delete(`${API_URL}/api/rooms/${roomId}/remove-user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -74,7 +76,7 @@ function RoomMembers({ roomId, onlineUsers}) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
+      await axios.post(`${API_URL}/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

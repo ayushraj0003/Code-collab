@@ -5,10 +5,12 @@ import axios from 'axios'; // Make sure axios is imported
 const UserDetailsPopup = ({ user, onClose }) => {
   const [userDetails, setUserDetails] = useState(null);
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/auth/userdetail/${user}`);
+        const response = await axios.get(`${API_URL}/api/auth/userdetail/${user}`);
         setUserDetails(response.data);
       } catch (err) {
         console.error('Failed to fetch user details', err);

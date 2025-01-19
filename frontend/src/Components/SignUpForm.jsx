@@ -38,9 +38,12 @@ function SignUpForm() {
     });
   };
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+  const API_FRONT = process.env.REACT_APP_FRONTEND_URL
+
   const handleSendOTP = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/send-otp', { email: formData.email });
+      const response = await axios.post('${API_URL}/api/auth/send-otp', { email: formData.email });
       alert(response.data.message);
     } catch (error) {
       console.error('Failed to send OTP', error);
@@ -50,7 +53,7 @@ function SignUpForm() {
 
   const handleVerifyOTP = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', { email: formData.email, otp });
+      const response = await axios.post('${API_URL}/api/auth/verify-otp', { email: formData.email, otp });
       alert(response.data.message);
       setOtpVerified(true);
 
@@ -69,12 +72,12 @@ function SignUpForm() {
     }
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const response = await axios.post('${API_URL}/api/auth/register', formData);
       console.log(response);
       const token = response.data.token;
       console.log(token );
       localStorage.setItem('token', token);
-      window.location.href = 'http://localhost:3000/dashboard';
+      window.location.href = '${API_FRONT}/dashboard';
     } catch (error) {
       console.error('There was an error registering: ', error.response.data);
     }

@@ -11,7 +11,7 @@ import './design.css';
 import RoomMembers from './RoomMembers';
 import RenderFoldersComponent from './RenderFoldersComponent'
 
-const socket = io('http://localhost:5000');
+const socket = io('${API_URL}');
 
 const RoomPage = () => {
   const { roomId } = useParams();
@@ -36,11 +36,13 @@ const RoomPage = () => {
 
   const navigate = useNavigate();
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
   useEffect(() => {
     const fetchRoomData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}`, {
+        const response = await axios.get(`${API_URL}/api/rooms/${roomId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
       
@@ -48,7 +50,7 @@ const RoomPage = () => {
         
         const names = users.map(user => ({ id: user._id, name: user.name })); // Extract user names
         setUserNames(names); 
-        const userResponse = await axios.get('http://localhost:5000/api/auth/details', {
+        const userResponse = await axios.get('${API_URL}/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log(token)
@@ -116,13 +118,13 @@ const RoomPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}/file/${file.filename}`, {
+      const response = await axios.get(`${API_URL}/api/rooms/${roomId}/file/${file.filename}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setCode(response.data.content);
 
-      const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
+      const authorResponse = await axios.get(`${API_URL}/api/auth/${response.data.latestAuth}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -156,7 +158,7 @@ const RoomPage = () => {
       const cleanedFolderPath = folderPath.startsWith('/') ? folderPath.slice(1) : folderPath;
 
       const response = await axios.get(
-        `http://localhost:5000/api/rooms/${roomId}/folder-file`,
+        `${API_URL}/api/rooms/${roomId}/folder-file`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: { folderPath: cleanedFolderPath, filename: file.filename },
@@ -165,7 +167,7 @@ const RoomPage = () => {
 
       setCode(response.data.content);
 
-      const authorResponse = await axios.get(`http://localhost:5000/api/auth/${response.data.latestAuth}`, {
+      const authorResponse = await axios.get(`${API_URL}/api/auth/${response.data.latestAuth}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -209,7 +211,7 @@ const handleLogout = () => {
     if (window.confirm('Are you sure you want to delete this room?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/rooms/delete/${roomId}`, {
+        await axios.delete(`${API_URL}/api/rooms/delete/${roomId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -224,7 +226,7 @@ const handleLogout = () => {
   const checkRoomOwner = async () => {
     try {
       const token = localStorage.getItem('token'); // Corrected from setItem to getItem
-      const response = await axios.get(`http://localhost:5000/api/rooms/${roomId}/owner`, {
+      const response = await axios.get(`${API_URL}/api/rooms/${roomId}/owner`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -247,7 +249,7 @@ const handleLogout = () => {
   const handleTransferOwnership = async (newOwnerId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
+      await axios.post(`${API_URL}/api/rooms/${roomId}/change-owner/${newOwnerId}`, null, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert('Ownership transferred successfully. You can now leave the room.');
@@ -261,7 +263,7 @@ const handleLogout = () => {
   const handleLeaveRoomRequest = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/rooms/${roomId}/leave`, {
+      await axios.delete(`${API_URL}/api/rooms/${roomId}/leave`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert('You have left the room.');

@@ -31,18 +31,20 @@ function Dashboard() {
     '/images/bg8.jpg',
   ];
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
   useEffect(() => {
     const fetchUserDetailsAndRooms = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('No token found. Please log in.');
 
-        const userResponse = await axios.get('http://localhost:5000/api/auth/details', {
+        const userResponse = await axios.get('${API_URL}/api/auth/details', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserDetails(userResponse.data);
 
-        const roomsResponse = await axios.get('http://localhost:5000/api/rooms/my-rooms', {
+        const roomsResponse = await axios.get('${API_URL}/api/rooms/my-rooms', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -75,7 +77,7 @@ function Dashboard() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5000/api/rooms/create',
+        '${API_URL}/api/rooms/create',
         { roomName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -109,7 +111,7 @@ function Dashboard() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5000/api/rooms/join',
+        '${API_URL}/api/rooms/join',
         { roomId: roomIdToJoin },
         { headers: { Authorization: `Bearer ${token}` } }
       );

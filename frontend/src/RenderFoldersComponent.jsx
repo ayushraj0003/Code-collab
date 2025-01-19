@@ -43,6 +43,8 @@
       }));
     };
 
+    const API_URL = process.env.REACT_APP_BACKEND_URL;
+
     const handleFileDragStart = (file, folderPaths) => {
       setDraggedFile({ file, folderPaths });
     };
@@ -55,7 +57,7 @@
         setIsDropInProgress(true);
 
         try {
-          await axios.post(`http://localhost:5000/api/rooms/move-file`, {
+          await axios.post(`${API_URL}/api/rooms/move-file`, {
             roomId,
             fileId: draggedFile.file._id,
             oldFolderPath: draggedFile.folderPaths,
@@ -118,7 +120,7 @@
         try {
           const token = localStorage.getItem('token');
           await axios.delete(
-            `http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(folderPaths)}/${file.filename}`,
+            `${API_URL}/api/rooms/${roomId}/file/${encodeURIComponent(folderPaths)}/${file.filename}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -159,7 +161,7 @@
         try {
           const token = localStorage.getItem('token');
           await axios.delete(
-            `http://localhost:5000/api/rooms/${roomId}/folder/${encodeURIComponent(folderPath)}`,
+            `${API_URL}/api/rooms/${roomId}/folder/${encodeURIComponent(folderPath)}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -198,14 +200,14 @@
       try {
         if (editing.type === 'file') {
           await axios.put(
-            `http://localhost:5000/api/rooms/${roomId}/file/${encodeURIComponent(editing.path)}/file/${encodeURIComponent(editing.name)}`,
+            `${API_URL}/api/rooms/${roomId}/file/${encodeURIComponent(editing.path)}/file/${encodeURIComponent(editing.name)}`,
             {
               newName: editing.name,  // Ensure the key is `newName` to match backend
             }
           );
         } else if (editing.type === 'folder') {
           await axios.put(
-            `http://localhost:5000/api/rooms/${roomId}/folder/${encodeURIComponent(editing.path)}`,
+            `${API_URL}/api/rooms/${roomId}/folder/${encodeURIComponent(editing.path)}`,
             {
               newName: editing.name,
             }
@@ -259,7 +261,7 @@
       try {
         const token = localStorage.getItem('token');
         await axios.post(
-          `http://localhost:5000/api/rooms/${roomId}/upload-file`,
+          `${API_URL}/api/rooms/${roomId}/upload-file`,
           formData,
           {
             headers: {

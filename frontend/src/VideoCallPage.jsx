@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
-
-const socket = io('http://localhost:5000'); // Connect to your backend
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+const socket = io('${API_URL}'); // Connect to your backend
 
 function VideoCallPage({ roomId }) {
   const localVideoRef = useRef(null);

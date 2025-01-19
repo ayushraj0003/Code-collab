@@ -5,6 +5,8 @@ function FileUpload({ roomId }) {
   const [files, setFiles] = useState([]);
   const [singleFile, setSingleFile] = useState(null);
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
     setFiles(selectedFiles);
@@ -41,7 +43,7 @@ function FileUpload({ roomId }) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:5000/api/rooms/${roomId}/upload-folder`,
+        `${API_URL}/api/rooms/${roomId}/upload-folder`,
         formData,
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       );
@@ -61,7 +63,7 @@ function FileUpload({ roomId }) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:5000/api/rooms/${roomId}/upload-file`,
+        `${API_URL}/api/rooms/${roomId}/upload-file`,
         formData,
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       );
