@@ -1,7 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 function SignInForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -26,7 +28,8 @@ function SignInForm() {
       console.log('Login successful: ', response.data);
       const token = response.data.token;
       localStorage.setItem('token', token);
-      window.location.href = `${API_FRONT}/dashboard`;
+      // window.location.href = `${API_FRONT}/dashboard`;
+      navigate('/dashboard');
     } catch (error) {
       console.error('There was an error logging in: ', error.response.data);
     }
