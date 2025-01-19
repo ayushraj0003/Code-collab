@@ -49,7 +49,7 @@ const RoomPage = () => {
         
         const names = users.map(user => ({ id: user._id, name: user.name })); // Extract user names
         setUserNames(names); 
-        const userResponse = await axios.get('${API_URL}/api/auth/details', {
+        const userResponse = await axios.get(`${API_URL}/api/auth/details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log(token)

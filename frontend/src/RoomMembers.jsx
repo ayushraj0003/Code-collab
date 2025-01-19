@@ -15,7 +15,7 @@ function RoomMembers({ roomId, onlineUsers}) {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('${API_URL}/api/auth/details', {
+        const response = await axios.get(`${API_URL}/api/auth/details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCurrentUser(response.data);

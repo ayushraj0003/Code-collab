@@ -27,7 +27,7 @@ function GroupChat() {
     const fetchUserDetails = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('${API_URL}/api/auth/details', {
+        const response = await axios.get(`${API_URL}/api/auth/details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserDetails(response.data);
