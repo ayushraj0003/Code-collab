@@ -33,10 +33,12 @@ app.use('/api/chat',chatRoutes);
 // Create an HTTP server and attach Express app to it
 const server = http.createServer(app);
 
+const allowedOrigins = ["https://codesphere-flame.vercel.app"];
+
 // Attach Socket.io to the HTTP server
 const io = new Server(server, {
   cors: {
-    origin: '*', // Update with your frontend's origin if necessary
+    origin: allowedOrigins,
     methods: ['GET', 'POST']
   }
 });
