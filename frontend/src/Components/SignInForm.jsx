@@ -22,11 +22,11 @@ function SignInForm() {
     event.preventDefault();
 
     try {
-      const response = await axios.post('${API_URL}/api/auth/login', formData);
+      const response = await axios.post(`${API_URL}/api/auth/login`, formData);
       console.log('Login successful: ', response.data);
       const token = response.data.token;
       localStorage.setItem('token', token);
-      window.location.href = '${API_FRONT}/dashboard';
+      window.location.href = `${API_FRONT}/dashboard`;
     } catch (error) {
       console.error('There was an error logging in: ', error.response.data);
     }

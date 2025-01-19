@@ -7,7 +7,7 @@ import { FaSignOutAlt, FaUsers, FaTimes } from 'react-icons/fa';
 
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-const socket = io('${API_URL}');
+const socket = io(`${API_URL}`);
 
 function GroupChat() {
   const { roomId } = useParams();

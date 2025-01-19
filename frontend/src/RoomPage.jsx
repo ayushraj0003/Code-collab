@@ -11,7 +11,8 @@ import './design.css';
 import RoomMembers from './RoomMembers';
 import RenderFoldersComponent from './RenderFoldersComponent'
 
-const socket = io('${API_URL}');
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+const socket = io(`${API_URL}`);
 
 const RoomPage = () => {
   const { roomId } = useParams();
@@ -35,8 +36,6 @@ const RoomPage = () => {
   const avatarRef = useRef(null);
 
   const navigate = useNavigate();
-
-  const API_URL = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
     const fetchRoomData = async () => {

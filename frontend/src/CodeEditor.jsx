@@ -10,7 +10,7 @@ import io from 'socket.io-client';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const socket = io('${API_URL}'); // Initialize socket outside component to avoid multiple connections
+const socket = io(`${API_URL}`); // Initialize socket outside component to avoid multiple connections
 
 const CodeEditor = ({ code, onCodeChange, roomId, filename, folderPaths, theme }) => {
   const [typingUsers, setTypingUsers] = useState({});
