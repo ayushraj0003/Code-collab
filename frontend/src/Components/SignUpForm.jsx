@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
+import axios from "axios";import { useNavigate } from 'react-router-dom';
 
 function SignUpForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -77,7 +79,8 @@ function SignUpForm() {
       const token = response.data.token;
       console.log(token );
       localStorage.setItem('token', token);
-      window.location.href = `${API_FRONT}/dashboard`;
+      // window.location.href = `${API_FRONT}/dashboard`;
+      navigate('/dashboard');
     } catch (error) {
       console.error('There was an error registering: ', error.response.data);
     }
