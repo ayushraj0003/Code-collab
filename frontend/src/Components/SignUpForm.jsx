@@ -41,7 +41,7 @@ function SignUpForm() {
   };
 
   const API_URL = process.env.REACT_APP_BACKEND_URL;
-  const API_FRONT = process.env.REACT_APP_FRONTEND_URL
+  // const API_FRONT = process.env.REACT_APP_FRONTEND_URL
 
   const handleSendOTP = async () => {
     try {

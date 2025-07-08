@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import './styles.css';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,7 +19,7 @@ function Login() {
     });
   };
   const API_URL = process.env.REACT_APP_BACKEND_URL;
-  const API_FRONT = process.env.REACT_APP_FRONTEND_URL
+  // const API_FRONT = process.env.REACT_APP_FRONTEND_URL
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -27,7 +29,8 @@ function Login() {
       console.log('Login successful: ', response.data);
       const token = response.data.token;
       localStorage.setItem('token', token);
-      window.location.href = `${API_FRONT}/dashboard`;
+      // window.location.href = `${API_FRONT}/dashboard`;
+      navigate('/dashboard');
     } catch (error) {
       console.error('There was an error logging in: ', error.response.data);
     }
