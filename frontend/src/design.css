@@ -23,9 +23,6 @@
     background-color: #e0e0e0;
   }
   
-  .room-right {
-    margin-top: 20px;
-  }
   
   .room-right button {
     display: block;
@@ -72,7 +69,7 @@
 .file-upload-container {
     padding: 20px;
     background-color: #f9f9f9;
-    border-radius: 8px;
+    border-radius: 20px;
     max-width: 600px;
     margin: 0 auto;
   }
@@ -86,7 +83,7 @@
   }
   
   .file-input {
-    display: block;
+    /* display: block; */
     margin-bottom: 10px;
   }
   
@@ -138,7 +135,7 @@
   
   /* Styling for file names */
   .file-name {
-    color: #555;
+    color: #120f0f;
     margin-bottom: 5px;
   }
   
@@ -175,12 +172,12 @@
   
   .room-content {
     flex: 1;
-    padding: 20px;
+    padding: 2px;
   }
   
   .room-right {
     width: 250px;
-    padding: 20px;
+    /* padding: 20px; */
   }
 
   .folder-icon{

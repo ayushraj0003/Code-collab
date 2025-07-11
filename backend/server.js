@@ -33,7 +33,7 @@ app.use('/api/chat',chatRoutes);
 // Create an HTTP server and attach Express app to it
 const server = http.createServer(app);
 
-const allowedOrigins = ["https://codesphere-flame.vercel.app"];
+const allowedOrigins = ["https://codesphere-flame.vercel.app","http://localhost:3000"];
 
 // Attach Socket.io to the HTTP server
 const io = new Server(server, {
@@ -162,6 +162,55 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
+// Update the existing typing event handlers in your io.on('connection') block
+
+// Update the existing typing event handlers in your io.on('connection') block
+
+socket.on('typing', ({ roomId, lineNumber, username, userId, filename }) => {
+  // Validate input data
+  if (!userId || userId === 'null' || !username || !roomId) {
+    console.warn('Invalid typing event data received:', { 
+      roomId: roomId || 'missing', 
+      lineNumber, 
+      username: username || 'missing', 
+      userId: userId || 'missing', 
+      filename 
+    });
+    return;
+  }
+  
+  console.log(`✅ User ${username} (ID: ${userId}) is typing on line ${lineNumber} in room ${roomId}`);
+  
+  // Broadcast typing indicator to all users in the room except the sender
+  socket.to(roomId).emit('userTyping', {
+    lineNumber,
+    username,
+    userId,
+    filename,
+    timestamp: Date.now()
+  });
+});
+
+socket.on('stoppedTyping', ({ roomId, userId, filename }) => {
+  // Validate input data
+  if (!userId || userId === 'null' || !roomId) {
+    console.warn('Invalid stopped typing event data received:', { 
+      roomId: roomId || 'missing', 
+      userId: userId || 'missing', 
+      filename 
+    });
+    return;
+  }
+  
+  console.log(`✅ User ID ${userId} stopped typing in room ${roomId}`);
+  
+  // Broadcast stopped typing to all users in the room except the sender
+  socket.to(roomId).emit('userStoppedTyping', {
+    userId,
+    filename,
+    timestamp: Date.now()
+  });
+});
 })
 
 // Start Server

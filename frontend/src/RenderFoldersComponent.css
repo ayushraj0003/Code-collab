@@ -1,0 +1,290 @@
+﻿/* RenderFoldersComponent.css */
+
+.folder-explorer {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  border: none;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    sans-serif;
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.explorer-header {
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.explorer-title {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.explorer-icon {
+  font-size: 1.8rem;
+  animation: bounce 2s infinite;
+}
+
+.explorer-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tree-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+  max-height: 70vh;
+}
+
+.tree-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tree-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.tree-container::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.5);
+  border-radius: 4px;
+}
+
+.tree-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.7);
+}
+
+.folder-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.folder-item,
+.file-item {
+  position: relative;
+  margin-bottom: 0.25rem;
+}
+
+.item-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.15rem;
+  min-height: 32px;
+}
+
+.item-container:hover {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateX(4px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  cursor: pointer;
+}
+
+.item-name {
+  color: #2d3748;
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.item-actions {
+  position: relative;
+  z-index: 200; /* Increased z-index */
+}
+
+.menu-trigger {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  color: #666;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.2s ease;
+  opacity: 1;
+  visibility: visible;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-trigger:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #6366f1;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-menu {
+  position: fixed;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  padding: 0.5rem;
+  min-width: 160px;
+  max-width: 180px;
+  z-index: 999999;
+  animation: dropdownAppear 0.2s ease;
+  pointer-events: auto;
+  backdrop-filter: blur(10px);
+  transform: translateZ(0);
+  /* Ensure the menu is always visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure menu items are more compact */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s ease;
+  color: #2d3748;
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  min-height: 32px;
+}
+
+.menu-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #6366f1;
+  transform: translateX(2px);
+}
+
+.menu-item:last-child {
+  margin-bottom: 0;
+}
+
+.menu-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* Improve the animation for better visibility */
+@keyframes dropdownAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Add a subtle indicator when menu is active */
+.item-actions:has(.dropdown-menu) .menu-trigger,
+.menu-trigger[aria-expanded="true"] {
+  background: rgba(102, 126, 234, 0.2);
+  color: #6366f1;
+}
+
+.item-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.expand-icon {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  color: #667eea;
+  font-size: 0.8rem;
+  width: 16px;
+  text-align: center;
+}
+
+.expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+.edit-input {
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+  color: #2d3748;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #718096;
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}

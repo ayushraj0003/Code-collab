@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './styles.css';
-import { FaSearch, FaTimes, FaSignOutAlt } from 'react-icons/fa'; // Import the logout icon
+import { FaSearch, FaTimes, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaCopy, FaExternalLinkAlt } from 'react-icons/fa'; // Import copy and link icons
 
 function Dashboard() {
   const [userDetails, setUserDetails] = useState(null);
@@ -17,7 +17,10 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState(''); 
   const [filteredRooms, setFilteredRooms] = useState([]); 
   const [roomBackgroundImages, setRoomBackgroundImages] = useState({}); 
-  const [isModalOpen, setIsModalOpen] = useState(false);  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(''); // State for copy success message
 
   const navigate = useNavigate();
   const backgroundImages = [
@@ -105,7 +108,6 @@ function Dashboard() {
       console.error('Error creating room:', err);
     }
   };
-  
 
   const joinRoom = async () => {
     try {
@@ -140,6 +142,41 @@ function Dashboard() {
     setShowSuccessMessage(false);
   };
 
+  // Function to copy room link
+  const handleCopyRoomLink = async (roomId, event) => {
+    event.stopPropagation(); // Prevent room card click
+    
+    try {
+      const roomLink = `${window.location.origin}/room/${roomId}`;
+      await navigator.clipboard.writeText(roomLink);
+      
+      setCopySuccess(roomId);
+      
+      // Clear success message after 2 seconds
+      setTimeout(() => {
+        setCopySuccess('');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy room link:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = `${window.location.origin}/room/${roomId}`;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopySuccess(roomId);
+        setTimeout(() => {
+          setCopySuccess('');
+        }, 2000);
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
   const getRandomBackgroundImage = () => {
     const randomIndex = Math.floor(Math.random() * backgroundImages.length);
     return backgroundImages[randomIndex];
@@ -147,6 +184,21 @@ function Dashboard() {
 
   const handleClearSearch = () => {
     setSearchTerm(''); 
+    setIsSearchExpanded(false);
+  };
+
+  const handleSearchIconClick = () => {
+    if (isSearchExpanded && searchTerm) {
+      // If expanded and has search term, perform search action here if needed
+      console.log('Searching for:', searchTerm);
+    } else if (isSearchExpanded) {
+      // If expanded but no search term, collapse
+      setIsSearchExpanded(false);
+      setSearchTerm('');
+    } else {
+      // If collapsed, expand
+      setIsSearchExpanded(true);
+    }
   };
 
   const handleLogout = () => {
@@ -158,36 +210,66 @@ function Dashboard() {
     setIsModalOpen(!isModalOpen);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarVisible(!isSidebarVisible);
+  };
+
+  // Handle clicking outside search bar to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isSearchExpanded && !event.target.closest('.search-btn')) {
+        setIsSearchExpanded(false);
+        if (!searchTerm) {
+          // Only clear if there's no search term to preserve user input
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSearchExpanded, searchTerm]);
+
   return (
     <div className="dashboard-container">
-      <div className="profile-container">
+      <div className={`profile-container ${isSidebarVisible ? 'visible' : 'hidden'}`}>
+        <button className="sidebar-toggle" onClick={toggleSidebar}>
+          {isSidebarVisible ? <FaChevronLeft /> : <FaChevronRight />}
+        </button>
         <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
-        <div className="profile-content">
-          {error ? (
-            <p className="error">Error: {error}</p>
-          ) : (
-            userDetails && (
-              <div>
-                <img
-                  src={userDetails.avatar}
-                  alt="User Avatar"
-                  className="user-avatar"
-                  onClick={toggleModal}
-                />
-                <p className="dashboard-welcome">{userDetails.name}</p>
-              </div>
-            )
-          )}
-          <div className="logout">
-          <button onClick={handleLogout} className="logout-btn">
-            <FaSignOutAlt /> Logout
-          </button>
-          </div>
-
-        </div>
+       <div className="profile-content">
+  {error ? (
+    <p className="error">Error: {error}</p>
+  ) : (
+    userDetails && (
+      <div className="user-section">
+        <img
+          src={userDetails.avatar}
+          alt="User Avatar"
+          className="user-avatar"
+          onClick={toggleModal}
+        />
+        <p className="dashboard-welcome">{userDetails.name}</p>
+      </div>
+    )
+  )}
+  <div className="logout">
+    <button onClick={handleLogout} className="logout-btn">
+      <FaSignOutAlt /> Logout
+    </button>
+  </div>
+</div>
       </div>
 
-      <div className="main-content">
+      {/* Sidebar toggle button for when sidebar is hidden */}
+      {!isSidebarVisible && (
+        <button className="sidebar-toggle-floating" onClick={toggleSidebar}>
+          <FaChevronRight />
+        </button>
+      )}
+
+      <div className={`main-content ${!isSidebarVisible ? 'expanded' : ''}`}>
         <h1>Dashboard</h1>
         <div className="dash">
           <div className='create-container'>
@@ -197,17 +279,17 @@ function Dashboard() {
             >
               {isCreateRoomVisible ? 'Cancel Create Room' : 'Create Room'}
             </button>
-            {isCreateRoomVisible && (
-              <div className="form-container visible">
-                <input
-                  type="text"
-                  placeholder="Enter Room Name"
-                  value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
-                />
-                <button onClick={createRoom}>Create Room</button>
-              </div>
-            )}
+{isCreateRoomVisible && (
+  <div className={`form-container-new ${isCreateRoomVisible ? 'visible' : ''}`}>
+    <input
+      type="text"
+      placeholder="Enter Room Name"
+      value={roomName}
+      onChange={(e) => setRoomName(e.target.value)}
+    />
+    <button onClick={createRoom}>Create Room</button>
+  </div>
+)}
             {showSuccessMessage && (
               <div className="copy-room-id">
                 <p>Room created successfully with ID: {createdRoomId}</p>
@@ -223,54 +305,115 @@ function Dashboard() {
             >
               {isJoinRoomVisible ? 'Cancel Join Room' : 'Join Room'}
             </button>
-            <div className={`form-container ${isJoinRoomVisible ? 'visible' : ''}`}>
-              <input
-                type="text"
-                placeholder="Enter Room ID"
-                value={roomIdToJoin}
-                onChange={(e) => setRoomIdToJoin(e.target.value)}
-              />
-              <button onClick={joinRoom}>Join Room</button>
-            </div>
+<div className={`form-container-new ${isJoinRoomVisible ? 'visible' : ''}`}>
+  <input
+    type="text"
+    placeholder="Enter Room ID"
+    value={roomIdToJoin}
+    onChange={(e) => setRoomIdToJoin(e.target.value)}
+  />
+  <button onClick={joinRoom}>Join Room</button>
+</div>
           </div>
         </div>
 
         <div className="room-containers">
           <div className="room-search-container">
             <h1>My Rooms</h1>
-            <div className="search-btn">
-              <input
-                type="text"
-                placeholder="Search Rooms"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="room-search-input"
-              />
-              {searchTerm ? (
-                <FaTimes className="search-icon" onClick={handleClearSearch} /> // Clear icon
+            <div className={`search-btn ${isSearchExpanded ? 'expanded' : 'collapsed'}`}>
+              {isSearchExpanded && (
+                <input
+                  type="text"
+                  placeholder="Search Rooms"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="room-search-input"
+                  autoFocus
+                />
+              )}
+              {searchTerm && isSearchExpanded ? (
+                <FaTimes className="search-icon" onClick={handleClearSearch} />
               ) : (
-                <FaSearch className="search-icon" /> // Magnifying icon
+                <FaSearch className="search-icon" onClick={handleSearchIconClick} />
               )}
             </div>
           </div>
 
           <div className="rooms-list">
             {filteredRooms.length > 0 ? (
-              filteredRooms.map((room) => (
+              filteredRooms.map((room, index) => (
                 <div
                   key={room.roomId}
-                  className="room-card"
+                  className={`room-card ${index < 3 ? 'new-room' : ''}`}
                   onClick={() => handleRoomClick(room.roomId)}
-                  style={{ backgroundImage: `url(${roomBackgroundImages[room.roomId]})` }}
                 >
-                  <div className="room-info">
-                    <p>{room.roomName}</p>
-                    <p>{room.roomId}</p>
+                  {/* Room Card Header */}
+                  <div className="room-card-header">
+                    <div className="room-icon">
+                      <i className="fas fa-code"></i>
+                    </div>
+                    <div className="room-status">
+                      Active
+                    </div>
                   </div>
+
+                  {/* Room Card Content */}
+                  <div className="room-card-content">
+                    <h3 className="room-name">{room.roomName}</h3>
+                    <p className="room-description">
+                      Collaborative coding workspace for real-time development
+                    </p>
+                  </div>
+
+                  {/* Room Card Footer */}
+                  <div className="room-card-footer">
+                    <div className="room-id-badge">
+                      ID: {room.roomId.slice(0, 8)}...
+                    </div>
+                    <div className="room-actions">
+                      <div className="room-members">
+                        <i className="fas fa-users"></i>
+                        <span>{Math.floor(Math.random() * 5) + 1}</span>
+                      </div>
+                      <button
+                        className={`copy-link-btn ${copySuccess === room.roomId ? 'copied' : ''}`}
+                        onClick={(e) => handleCopyRoomLink(room.roomId, e)}
+                        title="Copy room link"
+                      >
+                        {copySuccess === room.roomId ? (
+                          <>
+                            <i className="fas fa-check"></i>
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaCopy />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Copy Success Tooltip */}
+                  {copySuccess === room.roomId && (
+                    <div className="copy-success-tooltip">
+                      Room link copied to clipboard!
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
-              <p>No rooms found.</p>
+              <div className="rooms-empty-state">
+                <i className="fas fa-folder-open"></i>
+                <h3>No Rooms Found</h3>
+                <p>
+                  {searchTerm 
+                    ? `No rooms match your search for "${searchTerm}"`
+                    : "You haven't created or joined any rooms yet. Create your first room to get started!"
+                  }
+                </p>
+              </div>
             )}
           </div>
         </div>
