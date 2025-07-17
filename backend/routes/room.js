@@ -9,6 +9,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const router = express.Router();
+const { verifyRoomAccess } = require('../middleware/roomAccess');
 
 
 function verifyToken(req, res, next) {
@@ -126,32 +127,21 @@ router.get('/my-rooms', verifyToken, async (req, res) => {
 });
 
 // Example in Express.js
-router.get('/:roomId/users', verifyToken, async (req, res) => {
+router.get('/:roomId/users', verifyToken, verifyRoomAccess, async (req, res) => {
   try {
-    const room = await Room.findOne({ roomId: req.params.roomId })
-      .populate('userId')  
-      .populate('users'); 
-    
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-
-    res.status(200).json(room); // Send the room with populated userId and users
+    const room = req.room; // Already verified by middleware
+    res.status(200).json(room);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-router.post('/:roomId/save-code', verifyToken, async (req, res) => {
+router.post('/:roomId/save-code', verifyToken, verifyRoomAccess, async (req, res) => {
   try {
     const { code } = req.body;
-    const room = await Room.findOne({ roomId: req.params.roomId });
+    const room = req.room;
     
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-
     // Save the current version of the code
     room.codeHistory.push({ code, date: new Date() });
     await room.save();
@@ -162,38 +152,222 @@ router.post('/:roomId/save-code', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/:roomId/commit', verifyToken, async (req, res) => {
-  const { filename, newContent } = req.body;
-
+router.get('/:roomId', verifyToken, async (req, res) => {
   try {
-    const room = await Room.findOne({ roomId: req.params.roomId });
+    const { roomId } = req.params;
+    const userId = req.user.userId;
+
+    console.log(`User ${userId} requesting access to room ${roomId}`);
+    
+    // Find the room by its roomId
+    const room = await Room.findOne({ roomId })
+      .populate({
+        path: 'users',  
+        select: 'name avatar', 
+      })
+      .populate('folders.files.owner', 'name');
+
+    if (!room) {
+      console.log(`Room ${roomId} not found`);
+      return res.status(404).json({ 
+        success: false,
+        message: 'Room not found',
+        code: 'ROOM_NOT_FOUND'
+      });
+    }
+
+    // Verify user access
+    const isOwner = room.userId.toString() === userId.toString();
+    const isMember = room.users.some(user => user._id.toString() === userId.toString());
+
+    if (!isOwner && !isMember) {
+      console.log(`Access denied for user ${userId} to room ${roomId}`);
+      return res.status(403).json({ 
+        success: false,
+        message: 'You are not authorized to access this room',
+        code: 'ACCESS_DENIED'
+      });
+    }
+
+    console.log(`Access granted for user ${userId} to room ${roomId}`);
+    
+    // Respond with room data including folders and files
+    res.status(200).json({
+      success: true,
+      ...room.toObject(),
+      isOwner,
+      currentUserId: userId
+    });
+  } catch (err) {
+    console.error('Error fetching room:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Example Node.js/Express authorization middleware
+const isRoomOwner = async (req, res, next) => {
+  const room = await Room.findById(req.params.roomId);
+  if (!room || room.userId !== req.user._id) {
+    return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+  }
+  next();
+};
+
+// Route to remove a user from a room
+// Example route in Express.js
+router.delete('/:roomId/remove-user/:removeId', verifyToken, verifyRoomAccess, async (req, res) => {
+  try {
+    const { roomId, removeId } = req.params;
+    console.log(roomId);
+    console.log(removeId);
+    // Ensure `userId` is a valid ObjectId
+    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
+    //   return res.status(400).json({ message: 'Invalid user ID format.' });
+    // }
+    const room = await Room.findOne({roomId});
+    
+    console.log("hello");
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+    
+    // Check if the user making the request is the owner
+    if (req.user.userId !== room.userId.toString()) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+    }
+    console.log("here");
+    // Remove the user from the room's users array
+    room.users = room.users.filter(user => user.toString() !== removeId); // Convert ObjectId to string for comparison
+    console.log("noew here");
+    await room.save();
+
+    res.json({ message: 'User removed successfully.' });
+  } catch (error) {
+    console.error('Error removing user from room:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+router.post('/:roomId/change-owner/:newOwnerId', verifyToken, verifyRoomAccess, async (req, res) => {
+  try {
+    const { roomId, newOwnerId } = req.params;
+    console.log(newOwnerId)
+    // Ensure `userId` is a valid ObjectId
+    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
+    //   return res.status(400).json({ message: 'Invalid user ID format.' });
+    // }
+    const room = await Room.findOne({roomId});
+    
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+    
+    // Check if the user making the request is the owner
+    if (req.user.userId !== room.userId.toString()) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to change the owner ' });
+    }
+   
+    // Remove the user from the room's users array
+    room.userId=newOwnerId; // Convert ObjectId to string for comparison
+
+    await room.save();
+
+    res.json({ message: 'User removed successfully.' });
+  } catch (error) {
+    console.error('Error removing user from room:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+router.delete('/delete/:roomId', verifyToken, verifyRoomAccess, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user.userId;
+
+    const room = await Room.findOne({ roomId });
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    const file = room.files.find(f => f.filename === filename);
-
-    if (!file) {
-      return res.status(404).json({ message: 'File not found' });
+    // Check if the current user is the owner of the room
+    if (room.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'You are not authorized to delete this room' });
     }
 
-    // Add the new code version to the file's version history
-    file.codeHistory.push({
-      code: newContent,
-      author: req.user.userId , // Assuming `req.user.id` contains the user ID of the author
-    });
+    await Room.deleteOne({ roomId });
 
-    await room.save();
+    res.json({ message: 'Room deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete room', error: err.message });
+  }
+}); 
 
-    res.status(200).json({ message: 'Code committed successfully' });
+// Add this import at the top
+
+
+// Apply the middleware to all routes that need room access
+router.get('/:roomId/users', verifyToken, verifyRoomAccess, async (req, res) => {
+  try {
+    const room = req.room; // Already verified by middleware
+    res.status(200).json(room);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-router.post('/:roomId/upload-file', verifyToken, upload.single('file'), async (req, res) => {
+router.post('/:roomId/save-code', verifyToken, verifyRoomAccess, async (req, res) => {
+  try {
+    const { code } = req.body;
+    const room = req.room;
+    
+    // Save the current version of the code
+    room.codeHistory.push({ code, date: new Date() });
+    await room.save();
+
+    res.status(200).json({ message: 'Code saved successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/:roomId/file/:path/:filename', verifyToken, verifyRoomAccess, async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const paths = decodeURIComponent(req.params.path);
+    const room = req.room;
+
+    const folderPaths = paths.split('/').filter(Boolean);
+    let currentFolder = room.folders;
+    let folder;
+
+    for (const folderName of folderPaths) {
+      folder = currentFolder.find((f) => f.folderName === folderName);
+      if (!folder) {
+        return res.status(404).json({ message: 'Folder not found' });
+      }
+    }
+
+    const file = folder.files.find((file) => file.filename === filename);
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    const latestCode = file.codeHistory.length > 0 ? file.codeHistory[file.codeHistory.length - 1].code : '';
+    const latestAuth = file.codeHistory.length > 0 ? file.codeHistory[file.codeHistory.length - 1].author : '';
+
+    res.status(200).json({ content: latestCode, latestAuth, codeHistory: file.codeHistory });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:roomId/upload-file', verifyToken, verifyRoomAccess, upload.single('file'), async (req, res) => {
   try {
     const { roomId } = req.params;
     const room = await Room.findOne({ roomId });
@@ -237,78 +411,124 @@ router.post('/:roomId/upload-file', verifyToken, upload.single('file'), async (r
   }
 });
 
-router.get('/:roomId', verifyToken, async (req, res) => {
+router.post('/:roomId/commit', verifyToken, verifyRoomAccess, async (req, res) => {
+  const { filename, newContent } = req.body;
+
   try {
-    const { roomId } = req.params;
-    
-    // Find the room by its roomId
-    const room = await Room.findOne({ roomId })
-    .populate({
-      path: 'users',  
-      select: 'name avatar', 
-    })
-      .populate('folders.files.owner', 'name')
- 
+    const room = await Room.findOne({ roomId: req.params.roomId });
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
-    
-    // Respond with room data including folders and files
-    res.status(200).json(room);
+
+    const file = room.files.find(f => f.filename === filename);
+
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Add the new code version to the file's version history
+    file.codeHistory.push({
+      code: newContent,
+      author: req.user.userId , // Assuming `req.user.id` contains the user ID of the author
+    });
+
+    await room.save();
+
+    res.status(200).json({ message: 'Code committed successfully' });
   } catch (err) {
-    console.error(err);
+    console.error(err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-
-router.get('/:roomId/file/:path/:filename', verifyToken, async (req, res) => {
+router.get('/:roomId/folder-file', verifyToken, verifyRoomAccess, async (req, res) => {
   try {
-    const { roomId, filename } = req.params;
-    const paths = decodeURIComponent(req.params.path);
+    const { roomId } = req.params;
+    const { folderPath, filename } = req.query;
 
-    // Find the room by roomId
+    console.log('Received folderPath:', folderPath);  // Log received path
+    console.log('Received filename:', filename);  // Log received filename
+
     const room = await Room.findOne({ roomId });
 
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
-    const folderPaths = paths.split('/').filter(Boolean); // Remove empty strings from paths
-    let currentFolder = room.folders;
-    let folder;
 
-    for (const folderName of folderPaths) {
-      folder = currentFolder.find((f) => f.folderName === folderName);
-      if (!folder) {
-        return res.status(404).json({ message: 'Folder not found' });
-      }
+    // Log all folder paths in the room for comparison
+    console.log('Available folder paths:', room.folders.map(folder => folder.path));
+
+    // Decode folderPath to handle any URL encoding
+    const decodedFolderPath = decodeURIComponent(folderPath);
+    console.log('Decoded folderPath:', decodedFolderPath);  // Log decoded path
+
+    // Find the folder by decoded path
+    const folder = room.folders.find(folder => folder.path === decodedFolderPath);
+
+    if (!folder) {
+      console.log('Folder not found for path:', decodedFolderPath);  // Log failure
+      return res.status(404).json({ message: 'Folder not found' });
     }
 
-    console.log('Target folder found:', folder);
+    const file = folder.files.find(file => file.filename === filename);
 
-    // Find the file within the found folder
-    const file = folder.files.find((file) => file.filename === filename);
     if (!file) {
-      console.log(`File "${filename}" not found in folder "${folder.folderName}".`);
+      console.log('File not found in folder');  // Log file not found
       return res.status(404).json({ message: 'File not found' });
     }
 
+    const latestCode = file.codeHistory.length > 0
+      ? file.codeHistory[file.codeHistory.length - 1].code
+      : '';
 
-    // Fetch the latest code and author from codeHistory
-    const latestCode = file.codeHistory.length > 0 ? file.codeHistory[file.codeHistory.length - 1].code : '';
-    const latestAuth = file.codeHistory.length > 0 ? file.codeHistory[file.codeHistory.length - 1].author : '';
+    const latestAuth = file.codeHistory.length > 0
+      ? file.codeHistory[file.codeHistory.length - 1].author
+      : '';
 
-    // Return the file content and code history
-    res.status(200).json({ content: latestCode, latestAuth, codeHistory: file.codeHistory });
+    res.status(200).json({ content: latestCode, latestAuth });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+router.post('/:roomId/commit-folder-file', verifyToken, verifyRoomAccess, async (req, res) => {
+  const { folderPath, filename, newContent } = req.body;
 
-router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async (req, res) => {
+  try {
+    const room = await Room.findOne({ roomId: req.params.roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    const folder = room.folders.find(f => f.path === folderPath);
+    if (!folder) {
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+
+    const file = folder.files.find(f => f.filename === filename);
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Add the new code version to the file's version history
+    file.codeHistory.push({
+      code: newContent,
+      author: req.user.userId, // Assuming `req.user.userId` contains the user ID of the author
+    });
+
+    await room.save();
+
+    res.status(200).json({ message: 'Code committed successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/:roomId/upload-folder', verifyToken, verifyRoomAccess, upload.array('files'), async (req, res) => {
   try {
     const { roomId } = req.params;
     const folderStructure = JSON.parse(req.body.folderStructure);  // Parse folderStructure from the request body
@@ -382,7 +602,7 @@ router.post('/:roomId/upload-folder', verifyToken, upload.array('files'), async 
 
 
 
-router.get('/:roomId/folder-file', verifyToken, async (req, res) => {
+router.get('/:roomId/folder-file', verifyToken, verifyRoomAccess, async (req, res) => {
   try {
     const { roomId } = req.params;
     const { folderPath, filename } = req.query;
@@ -433,67 +653,7 @@ router.get('/:roomId/folder-file', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/:roomId/commit-folder-file', verifyToken, async (req, res) => {
-  const { folderPath, filename, newContent } = req.body;
-
-  try {
-    const room = await Room.findOne({ roomId: req.params.roomId });
-
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-
-    const folder = room.folders.find(f => f.path === folderPath);
-    if (!folder) {
-      return res.status(404).json({ message: 'Folder not found' });
-    }
-
-    const file = folder.files.find(f => f.filename === filename);
-    if (!file) {
-      return res.status(404).json({ message: 'File not found' });
-    }
-
-    // Add the new code version to the file's version history
-    file.codeHistory.push({
-      code: newContent,
-      author: req.user.userId, // Assuming `req.user.userId` contains the user ID of the author
-    });
-
-    await room.save();
-
-    res.status(200).json({ message: 'Code committed successfully' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-const extractRepoInfo = (repoUrl) => {
-  // Regular expression to match and capture owner and repo names
-  const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
-  const match = repoUrl.match(regex);
-
-  if (match && match.length === 3) {
-    const owner = match[1];
-    const repoName = match[2];
-    return { owner, repoName };
-  } else {
-    throw new Error('Invalid GitHub URL');
-  }
-};
-const getGitHubFiles = async (repoUrl) => {
-  const { owner, repoName } = extractRepoInfo(repoUrl);
-  console.log(repoUrl)
-  const apiUrl = `https://api.github.com/repos/${owner}/${repoName}/contents`;
-
-  try {
-    const response = await axios.get(apiUrl);
-    return response.data;
-  } catch (err) {
-    throw new Error(`Failed to fetch files from GitHub: ${err.message}`);
-  }
-};
-
-router.post('/:roomId/github-upload', async (req, res) => {
+router.post('/:roomId/github-upload', verifyToken, verifyRoomAccess, async (req, res) => {
   const { repoUrl } = req.body;
   const { roomId } = req.params;
 
@@ -528,127 +688,6 @@ router.post('/:roomId/github-upload', async (req, res) => {
   }
 });
 
-router.delete('/delete/:roomId', verifyToken, async (req, res) => {
-  try {
-    const { roomId } = req.params;
-    const userId = req.user.userId;
-
-    const room = await Room.findOne({ roomId });
-
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-
-    // Check if the current user is the owner of the room
-    if (room.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: 'You are not authorized to delete this room' });
-    }
-
-    await Room.deleteOne({ roomId });
-
-    res.json({ message: 'Room deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to delete room', error: err.message });
-  }
-}); 
-
-// const checkRoomOwner = async (req, res, next) => {
-//   const { roomId } = req.params;
-//   const {userId} = req.params; 
-
-//   try {
-//     const room = await Room.findOne({ roomId });
-
-//     if (!room) {
-//       return res.status(404).json({ message: 'Room not found' });
-//     }
-
-//     if (!room.userId.equals(userId)) {
-//       return res.status(403).json({ message: 'You are not the owner of this room' });
-//     }
-
-//     req.room = room; // Pass the room object to the next middleware
-//     next();
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error', error });
-//   }
-// };
-
-
-// Example Node.js/Express authorization middleware
-const isRoomOwner = async (req, res, next) => {
-  const room = await Room.findById(req.params.roomId);
-  if (!room || room.userId !== req.user._id) {
-    return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
-  }
-  next();
-};
-
-// Route to remove a user from a room
-// Example route in Express.js
-router.delete('/:roomId/remove-user/:removeId', verifyToken, async (req, res) => {
-  try {
-    const { roomId, removeId } = req.params;
-    console.log(roomId);
-    console.log(removeId);
-    // Ensure `userId` is a valid ObjectId
-    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
-    //   return res.status(400).json({ message: 'Invalid user ID format.' });
-    // }
-    const room = await Room.findOne({roomId});
-    
-    console.log("hello");
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found.' });
-    }
-    
-    // Check if the user making the request is the owner
-    if (req.user.userId !== room.userId.toString()) {
-      return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
-    }
-    console.log("here");
-    // Remove the user from the room's users array
-    room.users = room.users.filter(user => user.toString() !== removeId); // Convert ObjectId to string for comparison
-    console.log("noew here");
-    await room.save();
-
-    res.json({ message: 'User removed successfully.' });
-  } catch (error) {
-    console.error('Error removing user from room:', error);
-    res.status(500).json({ message: 'Internal server error.' });
-  }
-});
-
-router.post('/:roomId/change-owner/:newOwnerId', verifyToken, async (req, res) => {
-  try {
-    const { roomId, newOwnerId } = req.params;
-    console.log(newOwnerId)
-    // Ensure `userId` is a valid ObjectId
-    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
-    //   return res.status(400).json({ message: 'Invalid user ID format.' });
-    // }
-    const room = await Room.findOne({roomId});
-    
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found.' });
-    }
-    
-    // Check if the user making the request is the owner
-    if (req.user.userId !== room.userId.toString()) {
-      return res.status(403).json({ message: 'Forbidden: You do not have permission to change the owner ' });
-    }
-   
-    // Remove the user from the room's users array
-    room.userId=newOwnerId; // Convert ObjectId to string for comparison
-
-    await room.save();
-
-    res.json({ message: 'User removed successfully.' });
-  } catch (error) {
-    console.error('Error removing user from room:', error);
-    res.status(500).json({ message: 'Internal server error.' });
-  }
-});
 router.delete('/:roomId/leave', verifyToken, async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -695,7 +734,7 @@ router.get('/:roomId/owner', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, res) => {
+router.post('/:roomId/file/:paths/:filename/commit', verifyToken, verifyRoomAccess, async (req, res) => {
   try {
     const author =req.user.userId;
     console.log("Starting commit process...");
@@ -749,7 +788,7 @@ router.post('/:roomId/file/:paths/:filename/commit', verifyToken, async (req, re
   }
 });
 
-router.delete('/:roomId/file/:folderPath/:filename', verifyToken, async (req, res) => {
+router.delete('/:roomId/file/:folderPath/:filename', verifyToken, verifyRoomAccess, async (req, res) => {
   const { roomId, filename } = req.params;
   const folderPath = decodeURIComponent(req.params.folderPath); // Full folder path
   console.log(roomId, filename, folderPath);
@@ -847,7 +886,7 @@ router.post('/move-file', async (req, res) => {
   }
 });
 
-router.delete('/:roomId/folder/:folderPath', verifyToken, async (req, res) => {
+router.delete('/:roomId/folder/:folderPath', verifyToken, verifyRoomAccess, async (req, res) => {
   const { roomId } = req.params;
   const folderPath = decodeURIComponent(req.params.folderPath); // Full folder path
 
@@ -995,5 +1034,163 @@ router.put('/:roomId/file/:folderPath/file/:fileName', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+// Add this new route for room access verification
+router.get('/:roomId/verify-access', verifyToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user.userId;
+
+    console.log(`Verifying access for user ${userId} to room ${roomId}`);
+
+    // Find the room by roomId
+    const room = await Room.findOne({ roomId })
+      .populate({
+        path: 'users',
+        select: 'name avatar'
+      });
+
+    if (!room) {
+      console.log(`Room ${roomId} not found`);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Room not found',
+        code: 'ROOM_NOT_FOUND'
+      });
+    }
+
+    // Check if user is the owner or a member
+    const isOwner = room.userId.toString() === userId.toString();
+    const isMember = room.users.some(user => user._id.toString() === userId.toString());
+
+    if (!isOwner && !isMember) {
+      console.log(`User ${userId} is not authorized to access room ${roomId}`);
+      return res.status(403).json({ 
+        success: false, 
+        message: 'You are not authorized to access this room',
+        code: 'ACCESS_DENIED'
+      });
+    }
+
+    console.log(`Access granted for user ${userId} to room ${roomId}`);
+    res.status(200).json({ 
+      success: true, 
+      message: 'Access granted',
+      room: {
+        roomId: room.roomId,
+        roomName: room.roomName,
+        isOwner,
+        isMember: true
+      }
+    });
+
+  } catch (error) {
+    console.error('Error verifying room access:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while verifying access',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Owner-only routes - add additional owner check
+const verifyRoomOwner = (req, res, next) => {
+  if (!req.isOwner) {
+    return res.status(403).json({ 
+      success: false,
+      message: 'Only room owners can perform this action',
+      code: 'OWNER_REQUIRED'
+    });
+  }
+  next();
+};
+
+router.delete('/:roomId/remove-user/:removeId', verifyToken, verifyRoomAccess, verifyRoomOwner, async (req, res) => {
+  try {
+    const { roomId, removeId } = req.params;
+    console.log(roomId);
+    console.log(removeId);
+    // Ensure `userId` is a valid ObjectId
+    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
+    //   return res.status(400).json({ message: 'Invalid user ID format.' });
+    // }
+    const room = await Room.findOne({roomId});
+    
+    console.log("hello");
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+    
+    // Check if the user making the request is the owner
+    if (req.user.userId !== room.userId.toString()) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+    }
+    console.log("here");
+    // Remove the user from the room's users array
+    room.users = room.users.filter(user => user.toString() !== removeId); // Convert ObjectId to string for comparison
+    console.log("noew here");
+    await room.save();
+
+    res.json({ message: 'User removed successfully.' });
+  } catch (error) {
+    console.error('Error removing user from room:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+router.post('/:roomId/change-owner/:newOwnerId', verifyToken, verifyRoomAccess, verifyRoomOwner, async (req, res) => {
+  try {
+    const { roomId, newOwnerId } = req.params;
+    console.log(newOwnerId)
+    // Ensure `userId` is a valid ObjectId
+    // if (!mongoose.Types.ObjectId.isValid(removeId)) {
+    //   return res.status(400).json({ message: 'Invalid user ID format.' });
+    // }
+    const room = await Room.findOne({roomId});
+    
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found.' });
+    }
+    
+    // Check if the user making the request is the owner
+    if (req.user.userId !== room.userId.toString()) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to change the owner ' });
+    }
+   
+    // Remove the user from the room's users array
+    room.userId=newOwnerId; // Convert ObjectId to string for comparison
+
+    await room.save();
+
+    res.json({ message: 'User removed successfully.' });
+  } catch (error) {
+    console.error('Error removing user from room:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+router.delete('/delete/:roomId', verifyToken, verifyRoomAccess, verifyRoomOwner, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user.userId;
+
+    const room = await Room.findOne({ roomId });
+
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Check if the current user is the owner of the room
+    if (room.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'You are not authorized to delete this room' });
+    }
+
+    await Room.deleteOne({ roomId });
+
+    res.json({ message: 'Room deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete room', error: err.message });
+  }
+}); 
 
 module.exports = router;

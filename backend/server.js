@@ -50,68 +50,151 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', async ({ roomId, token }) => {
     try {
       // Verify the user's token to get the user ID
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
-      const userId = decoded.userId; // Adjust based on your token's payload
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
 
-      // Fetch the room to verify membership
-      const room = await Room.findOne({ roomId }).populate('users');
+      console.log(`User ${userId} attempting to join room ${roomId}`);
+
+      // Fetch the room to verify membership with populated users
+      const room = await Room.findOne({ roomId }).populate('users', '_id name');
 
       if (!room) {
-        socket.emit('error', 'Room not found');
+        console.log(`Room ${roomId} not found`);
+        socket.emit('roomError', { 
+          code: 'ROOM_NOT_FOUND',
+          message: 'Room not found' 
+        });
         return;
       }
 
-      // Check if the user is a member of the room
+      // Check if the user is the owner or a member of the room
+      const isOwner = room.userId.toString() === userId;
       const isMember = room.users.some((user) => user._id.toString() === userId);
 
-      if (isMember) {
-        // Add the user to the online users set and join the room
-        onlineUsers.add(userId);
-        socket.join(roomId);
-
-        // Emit the updated list of online users to the room
-        io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
-      } else {
-        socket.emit('error', 'You are not a member of this room');
+      if (!isOwner && !isMember) {
+        console.log(`User ${userId} denied access to room ${roomId} - not a member`);
+        socket.emit('roomError', { 
+          code: 'ACCESS_DENIED',
+          message: 'You are not authorized to access this room' 
+        });
+        return;
       }
+
+      // Add the user to the online users set and join the room
+      onlineUsers.add(userId);
+      socket.join(roomId);
+      socket.currentUserId = userId;
+      socket.currentRoomId = roomId;
+
+      console.log(`User ${userId} successfully joined room ${roomId}`);
+
+      // Emit success and updated list of online users to the room
+      socket.emit('roomJoined', { 
+        success: true,
+        roomId,
+        isOwner,
+        message: 'Successfully joined room' 
+      });
+      
+      io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
+      
+      // Notify other users in the room
+      socket.to(roomId).emit('userJoinedRoom', { 
+        userId,
+        username: room.users.find(u => u._id.toString() === userId)?.name || 'Unknown User'
+      });
+
     } catch (error) {
       console.error('Error joining room:', error);
-      socket.emit('error', 'Invalid token or server error');
+      socket.emit('roomError', { 
+        code: 'SERVER_ERROR',
+        message: 'Invalid token or server error' 
+      });
     }
   });
 
-  socket.on('sendMessage', async (message) => {
-    // console.log('Received message:', message); // Log received message
+  // Enhanced code change verification
+  socket.on('codeChange', async ({ roomId, code }) => {
     try {
-      io.to(message.roomId).emit('newMessage', message);
-      // console.log('Broadcasted message to room:', message); // Log broadcast action
+      const userId = socket.currentUserId;
+      
+      if (!userId || !roomId) {
+        socket.emit('error', 'Unauthorized code change attempt');
+        return;
+      }
+
+      // Verify user still has access to the room
+      const room = await Room.findOne({ roomId });
+      if (!room) {
+        socket.emit('roomError', { 
+          code: 'ROOM_NOT_FOUND',
+          message: 'Room no longer exists' 
+        });
+        return;
+      }
+
+      const isOwner = room.userId.toString() === userId;
+      const isMember = room.users.some((user) => user._id.toString() === userId);
+
+      if (!isOwner && !isMember) {
+        socket.emit('roomError', { 
+          code: 'ACCESS_DENIED',
+          message: 'You no longer have access to this room' 
+        });
+        return;
+      }
+
+      // Broadcast code change to other users in the room
+      socket.to(roomId).emit('codeUpdate', code);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error in code change:', error);
+      socket.emit('error', 'Code change failed');
     }
   });
-  
-  
 
-  socket.on('offer', ({ offer, roomId }) => {
-    socket.to(roomId).emit('offer', offer);
-  });
+  // Enhanced typing verification
+  socket.on('typing', async ({ roomId, lineNumber, username, userId, filename }) => {
+    try {
+      // Validate input data
+      if (!userId || userId === 'null' || !username || !roomId) {
+        console.warn('Invalid typing event data received');
+        return;
+      }
 
-  socket.on('answer', ({ answer, roomId }) => {
-    socket.to(roomId).emit('answer', answer);
-  });
+      // Verify user has access to the room
+      const room = await Room.findOne({ roomId });
+      if (!room) return;
 
-  socket.on('candidate', ({ candidate, roomId }) => {
-    socket.to(roomId).emit('candidate', candidate);
-  });
-  socket.on('codeChange', ({ roomId, code }) => {
-    socket.to(roomId).emit('codeUpdate', code);
+      const isOwner = room.userId.toString() === userId;
+      const isMember = room.users.some((user) => user._id.toString() === userId);
+
+      if (!isOwner && !isMember) {
+        socket.emit('roomError', { 
+          code: 'ACCESS_DENIED',
+          message: 'You no longer have access to this room' 
+        });
+        return;
+      }
+      
+      console.log(`✅ User ${username} (ID: ${userId}) is typing on line ${lineNumber} in room ${roomId}`);
+      
+      // Broadcast typing indicator to all users in the room except the sender
+      socket.to(roomId).emit('userTyping', {
+        lineNumber,
+        username,
+        userId,
+        filename,
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.error('Error in typing event:', error);
+    }
   });
 
   socket.on('leaveRoom', async ({ roomId, token }) => {
     try {
-      // Verify the user's token to get the user ID
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
-      const userId = decoded.userId; // Adjust based on your token's payload
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
 
       // Remove the user from the onlineUsers set
       onlineUsers.delete(userId);
@@ -119,50 +202,33 @@ io.on('connection', (socket) => {
       // Leave the room and emit the updated list of online users to the room
       socket.leave(roomId);
       io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
+      
+      // Notify other users
+      socket.to(roomId).emit('userLeftRoom', { userId });
+      
+      console.log(`User ${userId} left room ${roomId}`);
     } catch (error) {
       console.error('Error leaving room:', error);
-      socket.emit('error', 'Invalid token or server error');
     }
   });
 
-  socket.on('logout', async ({ roomId, token }) => {
-    try {
-      // Verify the user's token to get the user ID
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
-      const userId = decoded.userId; // Adjust based on your token's payload
-
-      // Remove the user from the onlineUsers set
-      onlineUsers.delete(userId);
-
-      // Leave the room and emit the updated list of online users to the room
-      socket.leave(roomId);
-      io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
-    } catch (error) {
-      console.error('Error leaving room:', error);
-      socket.emit('error', 'Invalid token or server error');
-    }
-  });
-  socket.on('disconnectUser', async ({ roomId, token }) => {
-    try {
-      // Verify the user's token to get the user ID
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace 'your_secret_key' with your actual secret key
-      const userId = decoded.userId; // Adjust based on your token's payload
-
-      // Remove the user from the onlineUsers set
-      onlineUsers.delete(userId);
-
-      // Leave the room and emit the updated list of online users to the room
-      socket.leave(roomId);
-      io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
-    } catch (error) {
-      console.error('Error leaving room:', error);
-      socket.emit('error', 'Invalid token or server error');
-    }
-  });
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    
+    // Clean up user from online users when they disconnect
+    if (socket.currentUserId) {
+      onlineUsers.delete(socket.currentUserId);
+      
+      if (socket.currentRoomId) {
+        io.to(socket.currentRoomId).emit('onlineUsers', Array.from(onlineUsers));
+        socket.to(socket.currentRoomId).emit('userLeftRoom', { 
+          userId: socket.currentUserId 
+        });
+      }
+    }
   });
-// Update the existing typing event handlers in your io.on('connection') block
+
+  // Update the existing typing event handlers in your io.on('connection') block
 
 // Update the existing typing event handlers in your io.on('connection') block
 

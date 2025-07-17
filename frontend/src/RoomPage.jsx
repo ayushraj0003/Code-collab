@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { FaSignOutAlt, FaTrashAlt } from "react-icons/fa";
+import { FaSignOutAlt, FaTrashAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa"; // Add chevron icons
 import io from "socket.io-client";
 import FileUpload from "./FileUpload";
 import Loader from "./Loader";
@@ -11,21 +11,32 @@ import "./design.css";
 import "./RoomPage.css";
 import RoomMembers from "./RoomMembers";
 import RenderFoldersComponent from "./RenderFoldersComponent";
+import useRoomAccess from "./hooks/useRoomAccess";
+// Fixed import path - changed from ./components/AccessDenied to ./AccessDenied
+import AccessDenied from "./Components/AccessDenied";
+import LoadingSpinner from "./Loader";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const socket = io(`${API_URL}`);
 
 const RoomPage = () => {
   const { roomId } = useParams();
+  const {
+    isLoading,
+    hasAccess,
+    roomData,
+    error: accessError, // Renamed to avoid conflict
+    retryAccess,
+  } = useRoomAccess(roomId);
+  
   const [room, setRoom] = useState(null);
-  const [error, setError] = useState(null);
   const [code, setCode] = useState("// Write your code here...");
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [authorName, setAuthorName] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
-  const [loading, setLoading] = useState(true); // State for loading
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -34,42 +45,50 @@ const RoomPage = () => {
   const [owner, setowner] = useState(null);
   const [userNames, setUserNames] = useState([]);
   const [isUploadSliderOpen, setIsUploadSliderOpen] = useState(false);
+  // Add state for sidebar visibility
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  // Add error state that was missing
+  const [error, setError] = useState(null);
+
   const dropdownRef = useRef(null);
   const avatarRef = useRef(null);
 
   const navigate = useNavigate();
 
-  useEffect(
-    () => {
-      const fetchRoomData = async () => {
-        try {
-          const token = localStorage.getItem("token");
-          const response = await axios.get(`${API_URL}/api/rooms/${roomId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+  useEffect(() => {
+    const fetchRoomData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API_URL}/api/rooms/${roomId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-          const users = response.data.users; // Assuming users is an array of user objectsc
+        const users = response.data.users;
 
-          const names = users.map((user) => ({
-            id: user._id,
-            name: user.name,
-          })); // Extract user names
-          setUserNames(names);
-          const userResponse = await axios.get(`${API_URL}/api/auth/details`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          console.log(token);
-          setUserDetails(userResponse.data);
-          setRoom(response.data);
-          setFiles(response.data.files || []);
-          setFolders(response.data.folders || []);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false); // Stop loading once data is fetched
-        }
-      };
+        const names = users.map((user) => ({
+          id: user._id,
+          name: user.name,
+        }));
+        setUserNames(names);
+        
+        const userResponse = await axios.get(`${API_URL}/api/auth/details`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        console.log(token);
+        setUserDetails(userResponse.data);
+        setRoom(response.data);
+        setFiles(response.data.files || []);
+        setFolders(response.data.folders || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    // Only fetch room data if access is verified
+    if (hasAccess && !isLoading) {
       fetchRoomData();
 
       socket.emit("joinRoom", { roomId, token: localStorage.getItem("token") });
@@ -80,8 +99,8 @@ const RoomPage = () => {
       socket.on("codeUpdate", (updatedCode) => {
         setCode(updatedCode);
       });
+      
       const handleClickOutside = (event) => {
-        // Check if the click is outside the dropdown and the avatar
         if (
           dropdownRef.current &&
           !dropdownRef.current.contains(event.target) &&
@@ -91,6 +110,7 @@ const RoomPage = () => {
           setOpenProfile(false);
         }
       };
+      
       document.addEventListener("mousedown", handleClickOutside);
 
       const handleBeforeUnload = () => {
@@ -101,22 +121,20 @@ const RoomPage = () => {
       };
 
       window.addEventListener("beforeunload", handleBeforeUnload);
+      
       return () => {
         socket.emit("leaveRoom", {
           roomId,
           token: localStorage.getItem("token"),
         });
         document.removeEventListener("mousedown", handleClickOutside);
-        socket.off("onlineUsers"); // Cleanup event listeners
+        socket.off("onlineUsers");
         socket.off("codeUpdate");
         window.removeEventListener("beforeunload", handleBeforeUnload);
         socket.disconnect();
       };
-    },
-    [roomId],
-    [files],
-    [folders]
-  );
+    }
+  }, [roomId, hasAccess, isLoading]);
 
   useEffect(() => {
     console.log("Updated online users:", onlineUsers);
@@ -161,6 +179,7 @@ const RoomPage = () => {
       )
     );
   };
+
   const handleGroupChatRedirect = () => {
     navigate(`/room/${roomId}/chat`);
   };
@@ -202,16 +221,20 @@ const RoomPage = () => {
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
-    setOpenProfile(false); // Close the dropdown when the modal opens
+    setOpenProfile(false);
   };
 
   const toggleProfile = () => {
     setOpenProfile(!openProfile);
   };
 
+  // Add toggle sidebar function
+  const toggleSidebar = () => {
+    setIsSidebarVisible(!isSidebarVisible);
+  };
+
   const handleLogout = () => {
     socket.emit("logout", { roomId, token: localStorage.getItem("token") });
-    // socket.disconnect();
     localStorage.removeItem("token");
     navigate("/");
   };
@@ -225,7 +248,7 @@ const RoomPage = () => {
         });
 
         alert("Room deleted successfully");
-        navigate("/dashboard"); // Redirect to the home or another page after deletion
+        navigate("/dashboard");
       } catch (err) {
         alert("Failed to delete the room");
       }
@@ -234,15 +257,15 @@ const RoomPage = () => {
 
   const checkRoomOwner = async () => {
     try {
-      const token = localStorage.getItem("token"); // Corrected from setItem to getItem
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${API_URL}/api/rooms/${roomId}/owner`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      return response.data.owner; // Return the owner status
+      return response.data.owner;
     } catch (error) {
       console.error("Error checking room ownership:", error);
-      return false; // Return false in case of error
+      return false;
     }
   };
 
@@ -285,7 +308,6 @@ const RoomPage = () => {
       alert("Failed to leave the room.");
     }
   };
-  const handleUserClick = (user) => {};
 
   const headtoDashboard = () => {
     navigate("/dashboard");
@@ -295,7 +317,6 @@ const RoomPage = () => {
     setIsUploadSliderOpen(!isUploadSliderOpen);
   };
 
-  // Close slider with Escape key
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape" && isUploadSliderOpen) {
@@ -312,12 +333,32 @@ const RoomPage = () => {
     };
   }, [isUploadSliderOpen]);
 
+  // Show loading while verifying access
+  if (isLoading) {
+    return (
+      <div className="room-container">
+        <LoadingSpinner message="Verifying room access..." />
+      </div>
+    );
+  }
+
+  // Show access denied if user doesn't have permission
+  if (!hasAccess) {
+    return (
+      <AccessDenied
+        error={accessError}
+        onRetry={retryAccess}
+        showRetry={true}
+      />
+    );
+  }
+
   if (error) {
     return <p>Error: {error}</p>;
   }
 
   if (loading) {
-    return <Loader />; // Show loader while fetching data
+    return <Loader />;
   }
 
   if (!room) {
@@ -326,21 +367,37 @@ const RoomPage = () => {
 
   return (
     <div className="room-container">
-      <div className="profile-container">
+      {/* Enhanced Profile Container with Retractable Sidebar */}
+      <div className={`profile-container ${isSidebarVisible ? 'visible' : 'hidden'}`}>
+        {/* Sidebar Toggle Button */}
+        <button className="sidebar-toggle" onClick={toggleSidebar}>
+          {isSidebarVisible ? <FaChevronLeft /> : <FaChevronRight />}
+        </button>
+
         <div className="room-sidebar">
           <img src="/images/logo3.png" alt="Logo" className="dash-logo" />
           <h1>{room.roomName}</h1>
           <RoomMembers roomId={roomId} onlineUsers={onlineUsers} />
         </div>
+
+        {/*    Buttons */}
         <button className="dash-btn" onClick={headtoDashboard}>
           <FaSignOutAlt /> Dashboard
         </button>
         <button className="chat-btn" onClick={handleGroupChatRedirect}>
-        <FaSignOutAlt /> Chat
-      </button>
+          <FaSignOutAlt /> Chat
+        </button>
       </div>
 
-      <div className="mains-content">
+      {/* Floating Sidebar Toggle Button (when sidebar is hidden) */}
+      {!isSidebarVisible && (
+        <button className="sidebar-toggle-floating" onClick={toggleSidebar}>
+          <FaChevronRight />
+        </button>
+      )}
+
+      {/* Main Content Area */}
+      <div className={`mains-content ${!isSidebarVisible ? 'expanded' : ''}`}>
         {/* User Avatar - Top Right */}
         <div className="user-avatar-room">
           {error ? (
