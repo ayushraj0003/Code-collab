@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/material.css";
@@ -23,9 +23,11 @@ const CodeEditor = ({
   const [currentUserName, setCurrentUserName] = useState("Unknown User");
   const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const userDataRef = useRef({ userId: null, token: null });
+  const isConnectedRef = useRef(false);
 
   // Function to decode user data from JWT token
-  const getUserDataFromToken = () => {
+  const getUserDataFromToken = useCallback(() => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -35,8 +37,6 @@ const CodeEditor = ({
 
       // Decode JWT token to get user information
       const payload = JSON.parse(atob(token.split(".")[1]));
-      console.log("Decoded token payload:", payload);
-      console.log(payload.userId);
       return {
         userId: payload.userId || payload.id || payload.sub,
         token: token,
@@ -45,9 +45,9 @@ const CodeEditor = ({
       console.error("Error decoding token:", error);
       return { userId: null, token: localStorage.getItem("token") };
     }
-  };
+  }, []);
 
-  const fetchUserName = async (userId) => {
+  const fetchUserName = useCallback(async (userId) => {
     try {
       const response = await fetch(`${API_URL}/api/auth/${userId}`);
       if (response.ok) {
@@ -59,208 +59,216 @@ const CodeEditor = ({
       console.error("Error fetching user name:", error);
       return "Unknown User";
     }
-  };
+  }, []);
 
-  useEffect(() => {
-    if (roomId) {
-      // Initialize socket connection
-      socketRef.current = io(API_URL);
-      const socket = socketRef.current;
-      const { userId: currentUserId, token } = getUserDataFromToken();
+  // Debounced typing handler
+  const handleTypingEvent = useCallback(
+    (lineNumber) => {
+      if (!socketRef.current || !roomId || !isConnectedRef.current) return;
 
-      console.log("Joining room:", roomId, "with user ID:", currentUserId);
+      const { userId } = userDataRef.current;
 
-      if (!token || !currentUserId) {
-        console.error("No valid token or userId available");
+      if (!userId || userId === "null" || !currentUserName) {
+        console.warn("Invalid user data, skipping typing event");
         return;
       }
 
-      // Fetch current user's name
-      fetchUserName(currentUserId).then((userName) => {
-        setCurrentUserName(userName);
-        console.log("Current user name:", userName);
-      });
+      // Clear previous timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
 
-      // Join the room
-      socket.emit("joinRoom", { roomId, token });
-
-      // Listen for code updates
-      socket.on("codeUpdate", (updatedCode) => {
-        onCodeChange(updatedCode);
-      });
-
-      // Listen for typing indicators from other users
-      socket.on(
-        "userTyping",
-        async ({
-          lineNumber,
-          username: typingUsername,
-          userId,
-          filename: typingFilename,
-        }) => {
-          console.log("Received typing event:", {
-            lineNumber,
-            typingUsername,
-            userId,
-            typingFilename,
-          });
-
-          // Don't show typing indicator for current user
-          if (
-            userId !== currentUserId &&
-            userId !== null &&
-            userId !== "null"
-          ) {
-            // If username is not provided or is "Unknown User", fetch it from API
-            let displayUsername = typingUsername;
-            if (!typingUsername || typingUsername === "Unknown User") {
-              displayUsername = await fetchUserName(userId);
-            }
-
-            setTypingUsers((prev) => {
-              const newTypingUsers = {
-                ...prev,
-                [userId]: {
-                  username: displayUsername,
-                  lineNumber: lineNumber,
-                  userId: userId,
-                  filename: typingFilename,
-                  timestamp: Date.now(),
-                },
-              };
-              console.log("Updated typing users:", newTypingUsers);
-              return newTypingUsers;
-            });
-
-            // Set current typing user for general display
-            setCurrentTypingUser(displayUsername);
-
-            // Clear typing indicator after 3 seconds of inactivity
-            setTimeout(() => {
-              setTypingUsers((prev) => {
-                const newTypingUsers = { ...prev };
-                if (
-                  newTypingUsers[userId] &&
-                  Date.now() - newTypingUsers[userId].timestamp > 2800
-                ) {
-                  delete newTypingUsers[userId];
-                }
-                return newTypingUsers;
-              });
-            }, 3000);
-          }
-        }
-      );
-
-      // Listen for user stopped typing
-      socket.on(
-        "userStoppedTyping",
-        ({ userId, filename: stoppedFilename }) => {
-          console.log("User stopped typing:", userId);
-
-          if (
-            userId !== currentUserId &&
-            userId !== null &&
-            userId !== "null"
-          ) {
-            setTypingUsers((prev) => {
-              const newTypingUsers = { ...prev };
-              delete newTypingUsers[userId];
-              console.log(
-                "Removed typing user:",
-                userId,
-                "Remaining:",
-                newTypingUsers
-              );
-              return newTypingUsers;
-            });
-
-            // Update current typing user
-            setCurrentTypingUser((prevUser) => {
-              const remainingUsers = Object.values(typingUsers);
-              if (remainingUsers.length === 0) {
-                return "";
-              }
-              return remainingUsers[0].username;
-            });
-          }
-        }
-      );
-
-      // Cleanup on unmount
-      return () => {
-        if (socket) {
-          socket.emit("leaveRoom", { roomId, token });
-          socket.disconnect();
-        }
-        if (typingTimeoutRef.current) {
-          clearTimeout(typingTimeoutRef.current);
-        }
-      };
-    }
-  }, [roomId, onCodeChange]);
-
-  const handleCodeChange = (editor, data, value) => {
-    onCodeChange(value);
-
-    if (socketRef.current && roomId) {
-      socketRef.current.emit("codeChange", { roomId, code: value });
-    }
-  };
-
-  const handleCursorActivity = (editor) => {
-    if (!socketRef.current || !roomId) return;
-
-    const cursor = editor.getCursor();
-    const lineNumber = cursor.line + 1;
-    const { userId } = getUserDataFromToken();
-
-    // Only emit if we have valid user data
-    if (!userId || userId === "null" || !currentUserName) {
-      console.warn("Invalid user data, skipping typing event:", {
-        userId,
+      // Emit typing event
+      socketRef.current.emit("typing", {
+        roomId,
+        lineNumber,
         username: currentUserName,
+        userId,
+        filename: filename || "Unknown File",
       });
+
+      // Set timeout to emit stopped typing after 2 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        if (socketRef.current && isConnectedRef.current) {
+          socketRef.current.emit("stoppedTyping", {
+            roomId,
+            userId,
+            filename: filename || "Unknown File",
+          });
+        }
+      }, 2000);
+    },
+    [roomId, currentUserName, filename]
+  );
+
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Get user data once
+    const userData = getUserDataFromToken();
+    userDataRef.current = userData;
+
+    if (!userData.token || !userData.userId) {
+      console.error("No valid token or userId available");
       return;
     }
 
-    console.log("Emitting typing event:", {
-      lineNumber,
-      username: currentUserName,
-      userId,
-      roomId,
-    });
-
-    // Clear previous timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
+    // Initialize socket connection only once
+    if (!socketRef.current) {
+      socketRef.current = io(API_URL, {
+        forceNew: true,
+        transports: ["websocket", "polling"],
+      });
     }
 
-    // Emit typing event with fetched username
-    socketRef.current.emit("typing", {
-      roomId,
-      lineNumber,
-      username: currentUserName, // Use the fetched username
-      userId,
-      filename: filename || "Unknown File",
+    const socket = socketRef.current;
+
+    // Fetch current user's name
+    fetchUserName(userData.userId).then((userName) => {
+      setCurrentUserName(userName);
     });
 
-    // Set timeout to emit stopped typing after 2 seconds of inactivity
-    typingTimeoutRef.current = setTimeout(() => {
-      if (socketRef.current) {
-        socketRef.current.emit("stoppedTyping", {
-          roomId,
-          userId,
-          filename: filename || "Unknown File",
+    // Socket event handlers
+    const handleConnect = () => {
+      console.log("Socket connected:", socket.id);
+      isConnectedRef.current = true;
+      // Join the room after connection
+      socket.emit("joinRoom", { roomId, token: userData.token });
+    };
+
+    const handleDisconnect = () => {
+      console.log("Socket disconnected");
+      isConnectedRef.current = false;
+    };
+
+    const handleRoomJoined = (data) => {
+      console.log("Successfully joined room:", data);
+    };
+
+    const handleCodeUpdate = (updatedCode) => {
+      onCodeChange(updatedCode);
+    };
+
+    const handleUserTyping = async ({
+      lineNumber,
+      username: typingUsername,
+      userId,
+      filename: typingFilename,
+    }) => {
+      // Don't show typing indicator for current user
+      if (userId !== userData.userId && userId !== null && userId !== "null") {
+        let displayUsername = typingUsername;
+        if (!typingUsername || typingUsername === "Unknown User") {
+          displayUsername = await fetchUserName(userId);
+        }
+
+        setTypingUsers((prev) => ({
+          ...prev,
+          [userId]: {
+            username: displayUsername,
+            lineNumber: lineNumber,
+            userId: userId,
+            filename: typingFilename,
+            timestamp: Date.now(),
+          },
+        }));
+
+        setCurrentTypingUser(displayUsername);
+
+        // Auto-clear typing indicator
+        setTimeout(() => {
+          setTypingUsers((prev) => {
+            const newTypingUsers = { ...prev };
+            if (
+              newTypingUsers[userId] &&
+              Date.now() - newTypingUsers[userId].timestamp > 2800
+            ) {
+              delete newTypingUsers[userId];
+            }
+            return newTypingUsers;
+          });
+        }, 3000);
+      }
+    };
+
+    const handleUserStoppedTyping = ({ userId }) => {
+      if (userId !== userData.userId && userId !== null && userId !== "null") {
+        setTypingUsers((prev) => {
+          const newTypingUsers = { ...prev };
+          delete newTypingUsers[userId];
+          return newTypingUsers;
+        });
+
+        // Update current typing user
+        setCurrentTypingUser((prevUser) => {
+          const remainingUsers = Object.values(typingUsers);
+          return remainingUsers.length > 0 ? remainingUsers[0].username : "";
         });
       }
-    }, 2000);
-  };
+    };
 
-  const handleKeyPress = (editor, event) => {
-    // Trigger typing indicator on key press
-    handleCursorActivity(editor);
-  };
+    // Add event listeners
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("roomJoined", handleRoomJoined);
+    socket.on("codeUpdate", handleCodeUpdate);
+    socket.on("userTyping", handleUserTyping);
+    socket.on("userStoppedTyping", handleUserStoppedTyping);
+
+    // If already connected, join room immediately
+    if (socket.connected) {
+      handleConnect();
+    }
+
+    // Cleanup function
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Remove event listeners
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("roomJoined", handleRoomJoined);
+      socket.off("codeUpdate", handleCodeUpdate);
+      socket.off("userTyping", handleUserTyping);
+      socket.off("userStoppedTyping", handleUserStoppedTyping);
+
+      // Leave room and disconnect
+      if (socket.connected) {
+        socket.emit("leaveRoom", { roomId, token: userData.token });
+      }
+
+      isConnectedRef.current = false;
+    };
+  }, [roomId, onCodeChange, fetchUserName, getUserDataFromToken]);
+
+  const handleCodeChange = useCallback(
+    (editor, data, value) => {
+      onCodeChange(value);
+
+      if (socketRef.current && roomId && isConnectedRef.current) {
+        socketRef.current.emit("codeChange", { roomId, code: value });
+      }
+    },
+    [onCodeChange, roomId]
+  );
+
+  const handleCursorActivity = useCallback(
+    (editor) => {
+      const cursor = editor.getCursor();
+      const lineNumber = cursor.line + 1;
+      handleTypingEvent(lineNumber);
+    },
+    [handleTypingEvent]
+  );
+
+  const handleKeyPress = useCallback(
+    (editor, event) => {
+      handleCursorActivity(editor);
+    },
+    [handleCursorActivity]
+  );
 
   return (
     <div className="code-editor-container">

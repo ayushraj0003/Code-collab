@@ -5,7 +5,8 @@ const http = require('http'); // Import the HTTP module
 const { Server } = require('socket.io'); // Import Socket.io
 const jwt = require('jsonwebtoken');
 const Room = require('./models/Room'); 
-const Chat=require("./models/Chat");
+const Chat = require('./models/Chat');
+const User = require('./models/User'); // Add User model import
 
 require('dotenv').config();
 
@@ -27,8 +28,8 @@ app.use('/api/auth', authRoutes);
 
 const roomRoutes = require('./routes/room');
 app.use('/api/rooms', roomRoutes);
-const chatRoutes=require('./routes/chat');
-app.use('/api/chat',chatRoutes);
+const chatRoutes = require('./routes/chat');
+app.use('/api/chat', chatRoutes);
 
 // Create an HTTP server and attach Express app to it
 const server = http.createServer(app);
@@ -42,7 +43,9 @@ const io = new Server(server, {
     methods: ['GET', 'POST']
   }
 });
+
 const onlineUsers = new Set();
+
 // Set up Socket.io for real-time collaboration
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -83,6 +86,7 @@ io.on('connection', (socket) => {
       // Add the user to the online users set and join the room
       onlineUsers.add(userId);
       socket.join(roomId);
+      socket.join(`chat_${roomId}`); // Join chat room for this specific room
       socket.currentUserId = userId;
       socket.currentRoomId = roomId;
 
@@ -152,7 +156,122 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Enhanced typing verification
+  // Handle group message sending - ONLY for group chat
+  socket.on('sendGroupMessage', async ({ roomId, message, senderId }) => {
+    try {
+      console.log(`Group message from ${senderId} in room ${roomId}: ${message}`);
+
+      // Verify user has access to the room
+      const room = await Room.findOne({ roomId });
+      if (!room) {
+        socket.emit('chatError', { message: 'Room not found' });
+        return;
+      }
+
+      const isOwner = room.userId.toString() === senderId;
+      const isMember = room.users.some((user) => user._id.toString() === senderId);
+
+      if (!isOwner && !isMember) {
+        socket.emit('chatError', { message: 'You are not authorized to send messages in this room' });
+        return;
+      }
+
+      // Save message to database
+      const newMessage = new Chat({
+        roomNo: roomId,
+        sender: senderId,
+        message,
+        type: 'group',
+      });
+
+      const savedMessage = await newMessage.save();
+      
+      // Populate sender details
+      const populatedMessage = await Chat.findById(savedMessage._id).populate('sender', 'name avatar');
+
+      // Broadcast message ONLY to users in group chat mode
+      io.to(`chat_${roomId}`).emit('newGroupMessage', {
+        _id: populatedMessage._id,
+        roomNo: populatedMessage.roomNo,
+        sender: populatedMessage.sender,
+        message: populatedMessage.message,
+        timestamp: populatedMessage.timestamp,
+        type: populatedMessage.type
+      });
+
+      console.log(`Group message broadcasted to room ${roomId}`);
+
+    } catch (error) {
+      console.error('Error sending group message:', error);
+      socket.emit('chatError', { message: 'Failed to send message' });
+    }
+  });
+
+  // Handle personal message sending - ONLY for personal chat
+  socket.on('sendPersonalMessage', async ({ roomId, message, senderId, receiverId }) => {
+    try {
+      console.log(`Personal message from ${senderId} to ${receiverId} in room ${roomId}: ${message}`);
+
+      // Verify user has access to the room
+      const room = await Room.findOne({ roomId });
+      if (!room) {
+        socket.emit('chatError', { message: 'Room not found' });
+        return;
+      }
+
+      const isOwner = room.userId.toString() === senderId;
+      const isMember = room.users.some((user) => user._id.toString() === senderId);
+
+      if (!isOwner && !isMember) {
+        socket.emit('chatError', { message: 'You are not authorized to send messages in this room' });
+        return;
+      }
+
+      // Save message to database
+      const newMessage = new Chat({
+        roomNo: roomId,
+        sender: senderId,
+        receiver: receiverId,
+        message,
+        type: 'personal',
+      });
+
+      const savedMessage = await newMessage.save();
+      
+      // Populate sender and receiver details
+      const populatedMessage = await Chat.findById(savedMessage._id)
+        .populate('sender', 'name avatar')
+        .populate('receiver', 'name avatar');
+
+      // Emit ONLY to sender and receiver in personal chat mode
+      const messageData = {
+        _id: populatedMessage._id,
+        roomNo: populatedMessage.roomNo,
+        sender: populatedMessage.sender,
+        receiver: populatedMessage.receiver,
+        message: populatedMessage.message,
+        timestamp: populatedMessage.timestamp,
+        type: populatedMessage.type
+      };
+
+      // Find sockets of sender and receiver in this room
+      const roomSockets = await io.in(`chat_${roomId}`).fetchSockets();
+      
+      for (const roomSocket of roomSockets) {
+        if (roomSocket.currentUserId === senderId || roomSocket.currentUserId === receiverId) {
+          roomSocket.emit('newPersonalMessage', messageData);
+        }
+      }
+
+      console.log(`Personal message sent between ${senderId} and ${receiverId} in room ${roomId}`);
+
+    } catch (error) {
+      console.error('Error sending personal message:', error);
+      socket.emit('chatError', { message: 'Failed to send message' });
+    }
+  });
+
+  // Enhanced typing verification with room access check
   socket.on('typing', async ({ roomId, lineNumber, username, userId, filename }) => {
     try {
       // Validate input data
@@ -161,9 +280,24 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Verify user has access to the room
+      // Use socket's stored user info for better performance, but also verify room access
+      const currentUserId = socket.currentUserId;
+      const currentRoomId = socket.currentRoomId;
+
+      if (currentUserId !== userId || currentRoomId !== roomId) {
+        console.warn('Typing event user/room mismatch');
+        return;
+      }
+
+      // Additional verification: Check if user still has access to the room
       const room = await Room.findOne({ roomId });
-      if (!room) return;
+      if (!room) {
+        socket.emit('roomError', { 
+          code: 'ROOM_NOT_FOUND',
+          message: 'Room no longer exists' 
+        });
+        return;
+      }
 
       const isOwner = room.userId.toString() === userId;
       const isMember = room.users.some((user) => user._id.toString() === userId);
@@ -175,7 +309,7 @@ io.on('connection', (socket) => {
         });
         return;
       }
-      
+
       console.log(`✅ User ${username} (ID: ${userId}) is typing on line ${lineNumber} in room ${roomId}`);
       
       // Broadcast typing indicator to all users in the room except the sender
@@ -191,6 +325,41 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Enhanced stopped typing event handler
+  socket.on('stoppedTyping', ({ roomId, userId, filename }) => {
+    try {
+      // Validate input data
+      if (!userId || userId === 'null' || !roomId) {
+        console.warn('Invalid stopped typing event data received:', { 
+          roomId: roomId || 'missing', 
+          userId: userId || 'missing', 
+          filename 
+        });
+        return;
+      }
+
+      // Use socket's stored user info for consistency
+      const currentUserId = socket.currentUserId;
+      const currentRoomId = socket.currentRoomId;
+
+      if (currentUserId !== userId || currentRoomId !== roomId) {
+        console.warn('Stopped typing event user/room mismatch');
+        return;
+      }
+      
+      console.log(`✅ User ID ${userId} stopped typing in room ${roomId}`);
+      
+      // Broadcast stopped typing to all users in the room except the sender
+      socket.to(roomId).emit('userStoppedTyping', {
+        userId,
+        filename,
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.error('Error in stopped typing event:', error);
+    }
+  });
+
   socket.on('leaveRoom', async ({ roomId, token }) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -199,8 +368,11 @@ io.on('connection', (socket) => {
       // Remove the user from the onlineUsers set
       onlineUsers.delete(userId);
 
-      // Leave the room and emit the updated list of online users to the room
+      // Leave both the main room and chat room
       socket.leave(roomId);
+      socket.leave(`chat_${roomId}`);
+      
+      // Emit the updated list of online users to the room
       io.to(roomId).emit('onlineUsers', Array.from(onlineUsers));
       
       // Notify other users
@@ -227,57 +399,7 @@ io.on('connection', (socket) => {
       }
     }
   });
-
-  // Update the existing typing event handlers in your io.on('connection') block
-
-// Update the existing typing event handlers in your io.on('connection') block
-
-socket.on('typing', ({ roomId, lineNumber, username, userId, filename }) => {
-  // Validate input data
-  if (!userId || userId === 'null' || !username || !roomId) {
-    console.warn('Invalid typing event data received:', { 
-      roomId: roomId || 'missing', 
-      lineNumber, 
-      username: username || 'missing', 
-      userId: userId || 'missing', 
-      filename 
-    });
-    return;
-  }
-  
-  console.log(`✅ User ${username} (ID: ${userId}) is typing on line ${lineNumber} in room ${roomId}`);
-  
-  // Broadcast typing indicator to all users in the room except the sender
-  socket.to(roomId).emit('userTyping', {
-    lineNumber,
-    username,
-    userId,
-    filename,
-    timestamp: Date.now()
-  });
 });
-
-socket.on('stoppedTyping', ({ roomId, userId, filename }) => {
-  // Validate input data
-  if (!userId || userId === 'null' || !roomId) {
-    console.warn('Invalid stopped typing event data received:', { 
-      roomId: roomId || 'missing', 
-      userId: userId || 'missing', 
-      filename 
-    });
-    return;
-  }
-  
-  console.log(`✅ User ID ${userId} stopped typing in room ${roomId}`);
-  
-  // Broadcast stopped typing to all users in the room except the sender
-  socket.to(roomId).emit('userStoppedTyping', {
-    userId,
-    filename,
-    timestamp: Date.now()
-  });
-});
-})
 
 // Start Server
 const PORT = process.env.PORT || 5000;

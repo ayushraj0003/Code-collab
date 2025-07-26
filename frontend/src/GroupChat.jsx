@@ -5,7 +5,6 @@ import MemberChat from './MemberChat';
 import io from 'socket.io-client';
 import { FaSignOutAlt, FaUsers, FaTimes } from 'react-icons/fa';
 
-
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const socket = io(`${API_URL}`);
 
@@ -75,42 +74,66 @@ function GroupChat() {
 
     // Join the room via socket
     socket.emit('joinRoom', { roomId, token: localStorage.getItem('token') });
+    
     socket.on('onlineUsers', (users) => {
       setOnlineUsers(users);
     });
 
-    socket.on('newMessage', ({ newMsg }) => {
-      if (newMsg && newMsg.sender && newMsg.sender._id) {
-        console.log('Received new message:', newMsg);
-        setMessages((prevMessages) => [...prevMessages, newMsg]);
-      } else {
-        console.error('Received invalid message data:', newMsg);
-      }
-    });
+    // **FIXED: Listen to appropriate chat events based on chat mode**
+    
+    // Listen for group messages ONLY when in group chat mode
+    if (isGroupChat) {
+      socket.on('newGroupMessage', (message) => {
+        console.log('Received new group message:', message);
+        if (message && message.sender && message.sender._id) {
+          setMessages((prevMessages) => [...prevMessages, message]);
+        } else {
+          console.error('Received invalid group message data:', message);
+        }
+      });
+    } else {
+      // Listen for personal messages ONLY when in personal chat mode
+      socket.on('newPersonalMessage', (message) => {
+        console.log('Received new personal message:', message);
+        if (message && message.sender && message.sender._id) {
+          // Only show messages between current user and the selected receiver
+          const currentUserId = userDetails?._id;
+          if (
+            (message.sender._id === currentUserId && message.receiver?._id === receiverId) ||
+            (message.sender._id === receiverId && message.receiver?._id === currentUserId)
+          ) {
+            setMessages((prevMessages) => [...prevMessages, message]);
+          }
+        } else {
+          console.error('Received invalid personal message data:', message);
+        }
+      });
+    }
 
     fetchUserDetails();
     fetchReceiverDetails();
     fetchMessages();
 
     const handlePopState = () => {
-      navigate(`/room/${roomId}`); // Redirect to dashboard
+      navigate(`/room/${roomId}`); // Redirect to room
     };
+    
     const handleBeforeUnload = () => {
       socket.emit('disconnectUser', { roomId, token: localStorage.getItem('token') });
     };
   
     window.addEventListener('beforeunload', handleBeforeUnload);
-
     window.addEventListener('popstate', handlePopState);
 
     return () => {
       socket.emit('leaveRoom', { roomId, token: localStorage.getItem('token') });
       socket.off('onlineUsers');
-      socket.off('newMessage'); // Cleanup listener on component unmount
+      socket.off('newGroupMessage'); // Remove group message listener
+      socket.off('newPersonalMessage'); // Remove personal message listener
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [roomId, receiverId, isGroupChat, navigate]);
+  }, [roomId, receiverId, isGroupChat, navigate, userDetails?._id]);
 
   useEffect(() => {
     // Scroll to the bottom whenever messages change
@@ -139,17 +162,23 @@ function GroupChat() {
         }
       );
 
-      const newMsg = {
-        ...response.data,
-        sender: {
-          _id: userDetails._id, // Ensure sender ID is set correctly
-          name: userDetails.name,
-          avatar: userDetails.avatar,
-        },
-      };
-
-      // Emit the new message to the server so it can be broadcasted
-      socket.emit('sendMessage', { newMsg, roomId });
+      // **FIXED: Use appropriate socket events for different chat types**
+      if (isGroupChat) {
+        // Emit group message
+        socket.emit('sendGroupMessage', {
+          roomId,
+          message: newMessage,
+          senderId: userDetails._id
+        });
+      } else {
+        // Emit personal message
+        socket.emit('sendPersonalMessage', {
+          roomId,
+          message: newMessage,
+          senderId: userDetails._id,
+          receiverId: receiverId
+        });
+      }
 
       setNewMessage(''); // Clear the input after sending
     } catch (err) {
