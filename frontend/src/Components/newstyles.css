@@ -88,6 +88,23 @@ body {
   }
 }
 
+@media (max-width: 768px) {
+  @keyframes show {
+    0% {
+      opacity: 0;
+      z-index: 1;
+    }
+    100% {
+      opacity: 1;
+      z-index: 5;
+    }
+  }
+
+  .container.right-panel-active .sign-up-container {
+    animation: show 0.6s forwards;
+  }
+}
+
 .overlay-container {
   position: absolute;
   top: 0;
@@ -207,10 +224,10 @@ form {
   justify-content: center;
   flex-direction: column;
   padding: 10px 30px;
-  /* height: 110%; */
   text-align: center;
   overflow-y: auto;
   gap: 0px;
+  height: 100%;
 }
 
 form h1 {
@@ -699,26 +716,59 @@ input:disabled {
 @media (max-width: 768px) {
   .container {
     width: 95vw;
-    height: 550px;
+    height: auto;
+    min-height: 550px;
     margin: 0.5rem;
+    overflow: hidden;
   }
-
+  
+  /* Critical fix for form containers on mobile */
   .form-containers {
     width: 100%;
+    position: relative;
+    top: 0;
     left: 0;
+    height: auto;
+    min-height: 550px;
+    transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
   }
-
-  .sign-in-container,
+  
+  .sign-in-container, 
   .sign-up-container {
     width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 1;
+    height: auto;
+    min-height: 550px;
+  }
+  
+  /* Fix the positioning for the right-panel-active state */
+  .container.right-panel-active .sign-in-container {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  
+  .container.right-panel-active .sign-up-container {
+    transform: translateX(0);
+    opacity: 1;
+    z-index: 5;
+  }
+  
+  .sign-up-container {
+    opacity: 0;
+    z-index: 1;
   }
 
+  /* Hide overlay on mobile */
   .overlay-container {
     display: none;
   }
 
   form {
     padding: 20px 25px;
+    height: auto;
   }
 
   .avatar-grid {
@@ -734,6 +784,92 @@ input:disabled {
   .otp-actions {
     flex-direction: column;
   }
+  
+  /* Show mobile toggle buttons */
+  .mobile-form-toggle {
+    display: flex;
+    margin-top: auto;
+    padding-top: 20px;
+  }
+}
+
+/* Mobile Form Toggle */
+.mobile-form-toggle {
+  display: none; /* Hidden by default (on desktop) */
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  width: 100%;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mobile-form-toggle span {
+  font-size: 14px;
+  color: #4a5568;
+  margin-bottom: 10px;
+}
+
+.toggle-form-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-form-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.toggle-form-btn i {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-form-btn:hover i {
+  transform: translateX(4px);
+}
+
+/* Enhanced Mobile Toggle - Show ONLY on mobile */
+@media (max-width: 768px) {
+  .mobile-form-toggle {
+    display: flex;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+  }
+  
+  .toggle-form-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    width: 100%;
+    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    justify-content: center;
+  }
+  
+  .toggle-form-btn:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+  }
+  
+  .mobile-form-toggle span {
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 500;
+  }
 }
 
 @media (max-width: 480px) {
@@ -742,7 +878,13 @@ input:disabled {
   }
 
   .container {
-    height: 500px;
+    min-height: 500px;
+  }
+  
+  .form-containers,
+  .sign-in-container,
+  .sign-up-container {
+    min-height: 500px;
   }
 
   form h1 {
@@ -866,103 +1008,136 @@ input:focus,
   text-decoration: underline;
 }
 
-/* Add these styles to your existing CSS file */
+/* Add these near your form styles section */
 
-/* Error input styling */
-.error-input {
-  border-color: #f56565 !important;
-  background-color: #fed7d7 !important;
-  box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1) !important;
-}
-
-.error-input:focus {
-  border-color: #e53e3e !important;
-  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2) !important;
-}
-
-/* Loading state for buttons */
-.ghost1:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Enhanced error and success messages */
-.error-message {
-  background: linear-gradient(135deg, #f56565, #e53e3e);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin: 12px 0;
-  font-size: 14px;
-  font-weight: 500;
+form {
+  background-color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 8px;
-  animation: slideInDown 0.3s ease;
-  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
-  border-left: 4px solid #c53030;
+  justify-content: center;
+  flex-direction: column;
+  padding: 10px 30px;
+  text-align: center;
+  overflow-y: auto;
+  gap: 0px;
+  height: 100%;
 }
 
-.success-message {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin: 12px 0;
-  font-size: 14px;
-  font-weight: 500;
+.sign-in-form,
+.signup-form {
+  height: 100%;
+  width: 100%;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  animation: slideInDown 0.3s ease;
-  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
-  border-left: 4px solid #2f855a;
+  flex-direction: column;
 }
 
-@keyframes slideInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-15px);
+@media (max-width: 768px) {
+  .sign-in-form,
+  .signup-form {
+    height: auto;
+    padding-bottom: 30px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  form {
+    height: auto;
+    padding-bottom: 20px;
   }
 }
 
-/* Spinner animation */
-.fa-spinner {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
+/* Fix scrolling for mobile signup form */
+@media (max-width: 768px) {
+  /* Make container have fixed height with scroll */
+  .container {
+    height: 85vh;
+    max-height: 700px;
+    overflow: hidden;
   }
-  100% {
-    transform: rotate(360deg);
+  
+  /* Make form containers scrollable */
+  .form-containers {
+    height: 100%;
+    overflow-y: auto;
+    position: absolute;
+  }
+  
+  .sign-up-container, 
+  .sign-in-container {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+  }
+
+  /* Add padding to form bottom for better scroll experience */
+  .signup-form {
+    padding-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  /* Ensure the scrollbar doesn't cause horizontal overflow */
+  .form-containers::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .form-containers::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  
+  .form-containers::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 4px;
+  }
+  
+  /* Fix positioning during animation */
+  .container.right-panel-active .sign-up-container {
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
+  
+  /* Apply better spacing for mobile form elements */
+  .form-row,
+  .password-row,
+  .avatar-selection,
+  .form-actions {
+    margin: 5px 0;
+  }
+  
+  /* Fix avatar selection positioning */
+  .avatar-selection {
+    margin: 10px 0;
+  }
+  
+  /* Fix toggle button positioning at the bottom */
+  .mobile-form-toggle {
+    margin-top: 15px;
+    margin-bottom: 10px;
   }
 }
 
-/* Disabled input styling */
-input:disabled {
-  background-color: #f1f5f9;
-  opacity: 0.7;
-  cursor: not-allowed;
+/* Ensure the OTP modal is properly scrollable and positioned */
+@media (max-width: 768px) {
+  .otp-modal {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  .otp-modal-body {
+    padding: 20px;
+  }
 }
 
-.password-toggle-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Responsive error messages */
-@media (max-width: 480px) {
-  .error-message,
-  .success-message {
-    font-size: 13px;
-    padding: 10px 14px;
+/* Fix body overflow on mobile */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    position: relative;
+    height: 100%;
+  }
+  
+  .auth-container {
+    min-height: 100%;
+    padding: 15px 5px;
   }
 }

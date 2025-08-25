@@ -34,10 +34,12 @@
   padding: 0;
   border: none;
   overflow: hidden;
+  position: fixed;
 }
 
 .profile-container.visible {
   transform: translateX(0);
+  position: fixed;
 }
 
 .profile-container::before {
@@ -744,6 +746,8 @@
   .profile-container {
     width: 240px;
     padding: 1rem;
+    position: fixed;
+    height: 100vh;
   }
 
   .profile-container.hidden {
@@ -780,6 +784,8 @@
   .profile-container {
     width: 200px;
     padding: 0.8rem;
+    height: 100vh;
+    position: fixed;
   }
 
   .chat-btn,

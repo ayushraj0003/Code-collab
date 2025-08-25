@@ -220,7 +220,7 @@
 
 
 .dashboard-container {
-  display: flex;
+  /* display: flex; */
   height: 100vh; /* Full height of the viewport */
   width: 100vw; /* Full width of the viewport */
   background-color: #eaf0f0; /* Light grey background */
@@ -376,7 +376,7 @@ input {
 
 
 .dashboard-container {
-  display: flex;
+  /* display: flex; */
   height: 100vh; /* Full height of the viewport */
   width: 100vw; /* Full width of the viewport */
   background-color: #eaf0f0; /* Light grey background */
@@ -641,7 +641,7 @@ input {
 
 
 .dashboard-container {
-  display: flex;
+  /* display: flex; */
   height: 100vh; /* Full height of the viewport */
   width: 100vw; /* Full width of the viewport */
   background-color: #eaf0f0; /* Light grey background */

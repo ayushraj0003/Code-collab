@@ -150,7 +150,7 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, onResend }) => {
   );
 };
 
-function SignUpForm() {
+function SignUpForm({ onToggleForm }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -477,6 +477,18 @@ function SignUpForm() {
                 )}
               </button>
             )}
+          </div>
+
+          {/* Mobile Toggle Button */}
+          <div className="mobile-form-toggle">
+            <span>Already have an account?</span>
+            <button
+              type="button"
+              onClick={onToggleForm}
+              className="toggle-form-btn"
+            >
+              Sign In <i className="fas fa-arrow-right"></i>
+            </button>
           </div>
         </form>
       </div>

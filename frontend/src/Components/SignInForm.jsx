@@ -3,7 +3,7 @@ import axios from "axios";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-function SignInForm() {
+function SignInForm({ onToggleForm }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -173,6 +173,18 @@ function SignInForm() {
             "Sign In"
           )}
         </button>
+
+        {/* Mobile Toggle Button */}
+        <div className="mobile-form-toggle">
+          <span>Don't have an account?</span>
+          <button
+            type="button"
+            onClick={onToggleForm}
+            className="toggle-form-btn"
+          >
+            Sign Up <i className="fas fa-arrow-right"></i>
+          </button>
+        </div>
       </form>
     </div>
   );

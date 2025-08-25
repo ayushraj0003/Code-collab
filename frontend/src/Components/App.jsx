@@ -6,19 +6,21 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function App() {
   const [type, setType] = useState("signIn");
+  
   const handleOnClick = text => {
     if (text !== type) {
       setType(text);
       return;
     }
   };
-  const containerClass =
-    "container " + (type === "signUp" ? "right-panel-active" : "");
+  
+  const containerClass = "container " + (type === "signUp" ? "right-panel-active" : "");
+  
   return (
     <div className="auth-container">
       <div className={containerClass} id="container">
-        <SignUpForm />
-        <SignInForm />
+        <SignUpForm onToggleForm={() => handleOnClick("signIn")} />
+        <SignInForm onToggleForm={() => handleOnClick("signUp")} />
         <div className="overlay-container">
           <div className="overlay">
             <div className="overlay-panel overlay-left">
