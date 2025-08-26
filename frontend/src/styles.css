@@ -681,7 +681,7 @@ input {
   z-index: 2; /* Ensure it stays below any other content with a higher z-index */
   transition: all 0.3s ease-in-out;
   margin-left:30px;
-  overflow-y: hidden;
+  /* overflow-y: hidden; */
 }
 
 
@@ -3543,7 +3543,7 @@ input {
     position: absolute;
     transition: all 0.3s ease;
     padding-top: 60px !important; /* Space for the toggle button */
-    overflow-y: hidden;
+    /* overflow-y: hidden; */
   }
   
   /* Text input positioning */
