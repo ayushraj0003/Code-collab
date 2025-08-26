@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom"; // To access state passed via navigation
-import CodeEditor from "./CodeEditor"; // Import the CodeEditor component
+import { useLocation } from "react-router-dom";
 import axios from "axios";
-import "./FileEditor.css"; // Import the enhanced styles
+import CodeEditor from "./CodeEditor";
+import "./FileEditor.css";
+// import "./FileEditorResponsive.css";
 
 // Enhanced Modal component for commit message input
 const CommitModal = ({
@@ -72,6 +73,9 @@ const FileEditor = () => {
   const [commitTitle, setCommitTitle] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState("seti");
+
+  // NEW: header modal state
+  const [isHeaderModalOpen, setHeaderModalOpen] = useState(false);
 
   const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -207,74 +211,102 @@ const FileEditor = () => {
     return icons[theme] || "fas fa-paint-brush";
   };
 
-  return (
-    <div className="file-editor-container">
-      {/* Enhanced Header */}
-      <div className="file-editor-header">
-        <div className="file-info">
-          <div className="file-details">
-            <h1 className="file-name">
-              <i className="fas fa-file-code"></i>
-              {file?.filename}
-            </h1>
-            {latestAuthor && username && (
-              <p className="last-edited">
-                <i className="fas fa-user-edit"></i>
-                Last edited by <strong>{username}</strong>
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="editor-controls">
-          {/* Version History Button */}
-          <div className="control-group" style={{ position: "relative" }}>
-            <button
-              className={`btn btn-version ${
-                showVersionHistory ? "active" : ""
-              }`}
-              onClick={toggleVersionHistory}
-              title="View Version History"
-              style={{
-                backgroundColor: showVersionHistory ? "#48bb78" : "#667eea",
-              }}
-            >
-              <i className="fas fa-history"></i>
-              Version History
-              {showVersionHistory && (
-                <span style={{ marginLeft: "8px" }}>✓</span>
-              )}
-            </button>
-          </div>
-
-          {/* Commit Button */}
-          <button
-            className="btn btn-commit"
-            onClick={handleCommitButtonClick}
-            title="Commit Your Changes"
-          >
-            <i className="fas fa-save"></i>
-            Commit Code
-          </button>
-
-          {/* Theme Selector */}
-          <div className="control-group" style={{ position: "relative" }}>
-            <button
-              className={`btn btn-theme ${showThemeSelector ? "active" : ""}`}
-              onClick={toggleThemeSelector}
-              title="Change Editor Theme"
-              style={{
-                backgroundColor: showThemeSelector ? "#9f7aea" : "#667eea",
-              }}
-            >
-              <i className={getThemeIcon(currentTheme)}></i>
-              {showThemeSelector && (
-                <span style={{ marginLeft: "8px" }}>✓</span>
-              )}
-            </button>
-          </div>
+  // extract your existing header JSX so we can reuse it
+  const headerJSX = (
+    <div className="file-editor-header">
+      <div className="file-info">
+        <div className="file-details">
+          <h1 className="file-name">
+            <i className="fas fa-file-code"></i>
+            {file?.filename}
+          </h1>
+          {latestAuthor && username && (
+            <p className="last-edited">
+              <i className="fas fa-user-edit"></i>
+              Last edited by <strong>{username}</strong>
+            </p>
+          )}
         </div>
       </div>
+
+      <div className="editor-controls">
+        {/* Version History Button */}
+        <div className="control-group" style={{ position: "relative" }}>
+          <button
+            className={`btn btn-version ${showVersionHistory ? "active" : ""}`}
+            onClick={toggleVersionHistory}
+            title="View Version History"
+            style={{
+              backgroundColor: showVersionHistory ? "#48bb78" : "#667eea",
+            }}
+          >
+            <i className="fas fa-history"></i>
+            Version History
+            {showVersionHistory && <span style={{ marginLeft: "8px" }}>✓</span>}
+          </button>
+        </div>
+
+        {/* Commit Button */}
+        <button
+          className="btn btn-commit"
+          onClick={handleCommitButtonClick}
+          title="Commit Your Changes"
+        >
+          <i className="fas fa-save"></i>
+          Commit Code
+        </button>
+
+        {/* Theme Selector */}
+        <div className="control-group" style={{ position: "relative" }}>
+          <button
+            className={`btn btn-theme ${showThemeSelector ? "active" : ""}`}
+            onClick={toggleThemeSelector}
+            title="Change Editor Theme"
+            style={{
+              backgroundColor: showThemeSelector ? "#9f7aea" : "#667eea",
+            }}
+          >
+            <i className={getThemeIcon(currentTheme)}></i>
+            {showThemeSelector && <span style={{ marginLeft: "8px" }}>✓</span>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="file-editor-container">
+      {/* 1) Toggle button (hidden on desktop) */}
+      <button
+        className="header-toggle"
+        onClick={() => setHeaderModalOpen(true)}
+      >
+        <i className="fas fa-bars"></i>
+      </button>
+
+      {/* 2) Inline header (hidden via CSS on small screens) */}
+      {headerJSX}
+
+      {/* 3) Modal wrapper (only when open) */}
+      {isHeaderModalOpen && (
+        <div
+          className="header-modal-overlay"
+          onClick={() => setHeaderModalOpen(false)}
+        >
+          <div
+            className="header-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="header-modal-close"
+              onClick={() => setHeaderModalOpen(false)}
+            >
+              <i className="fas fa-times"></i>
+            </button>
+            {headerJSX}
+          </div>
+        </div>
+      )}
 
       {/* Editor Content */}
       <div className="file-editor-content">

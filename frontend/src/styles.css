@@ -681,6 +681,7 @@ input {
   z-index: 2; /* Ensure it stays below any other content with a higher z-index */
   transition: all 0.3s ease-in-out;
   margin-left:30px;
+  overflow-y: hidden;
 }
 
 
@@ -3359,3 +3360,484 @@ input {
 .copy-link-btn.copied {
   animation: copySuccess 0.3s ease-in-out;
 }  
+/* Mobile Dashboard Button Centering - Add this to the bottom of your styles.css file */
+
+@media (max-width: 768px) {
+  /* Center Create Room and Join Room buttons */
+  .dash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 20px;
+    margin: 30px 0;
+  }
+  
+  .create-container,
+  .join-container {
+    width: 100%;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .create-btn,
+  .join-btn {
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  /* Center form containers and their content */
+  .form-container-new {
+    flex-direction: column;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  
+  .form-container-new input,
+  .form-container-new button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .form-container-new input {
+    margin-bottom: 10px;
+  }
+  
+  /* Center copy room ID message */
+  .copy-room-id {
+    flex-direction: column;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .copy-room-id p {
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  
+  /* Fix dashboard header centering */
+  .main-content h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Center rooms heading and search */
+  .room-search-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+  
+  .room-search-container h1 {
+    margin: 0;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .create-container,
+  .join-container,
+  .form-container-new {
+    max-width: 250px;
+  }
+  
+  .copy-room-id p {
+    font-size: 12px;
+  }
+  
+  .copy-room-id button {
+    height: 40px;
+    font-size: 14px;
+  }
+}
+/* Mobile Chat Toggle Button - Add to the bottom of your styles.css file */
+
+@media (max-width: 768px) {
+  /* Chat container for mobile */
+  .chat-container {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  /* Full-screen profile sidebar for mobile */
+  .profile-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none;
+    background-color: #282c34;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    border-radius: 0;
+    padding-top: 60px; /* Space for the close button */
+  }
+  
+  /* When sidebar is visible */
+  .profile-container.visible {
+    transform: translateX(0);
+  }
+  
+  /* Close button for the sidebar on mobile */
+  .mobile-sidebar-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .mobile-sidebar-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Toggle button to open sidebar (only visible when sidebar is closed) */
+  .mobile-sidebar-open {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  }
+  
+  /* Main content should take full width when sidebar is hidden */
+  .main-content {
+    width: 100% !important;
+    left: 0 !important;
+    padding: 20px !important;
+    margin-left: 0 !important;
+    position: absolute;
+    transition: all 0.3s ease;
+    padding-top: 60px !important; /* Space for the toggle button */
+    overflow-y: hidden;
+  }
+  
+  /* Text input positioning */
+  .txt-box {
+    left: 10px !important;
+    width: calc(100% - 20px) !important;
+    max-width: none !important;
+  }
+  
+  .txt-box.short {
+    width: calc(100% - 20px) !important;
+    left: 10px !important;
+  }
+  
+  /* Group button styling */
+  .group-btn {
+    width: 90%;
+    max-width: 280px;
+    margin: 0 auto 20px;
+  }
+  
+  /* Member items styling */
+  .member-item {
+    width: 90%;
+    max-width: 280px;
+    margin: 5px auto;
+  }
+  
+  /* When sidebar is visible, darken and scale main content */
+  .main-content.dimmed {
+    opacity: 0.4;
+    transform: scale(0.95);
+    pointer-events: none;
+    filter: blur(3px);
+  }
+  
+  /* Overlay when sidebar is open */
+  .mobile-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .mobile-sidebar-overlay.visible {
+    opacity: 0;
+    visibility: visible;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .mobile-sidebar-close {
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+  }
+  
+  .mobile-sidebar-open {
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .main-content {
+    padding: 15px !important;
+    padding-top: 60px !important;
+  }
+}
+/* Add to the bottom of your styles.css file */
+
+/* Fix sidebar navigation issues */
+.profile-container {
+  z-index: 1001 !important; /* Ensure sidebar is on top */
+}
+
+/* Prevent click event issues */
+.group-btn,
+.member-item {
+  position: relative;
+  z-index: 100;
+  cursor: pointer;
+}
+
+/* Fix positioning for mobile sidebar elements */
+@media (max-width: 768px) {
+  .mobile-sidebar-overlay {
+    z-index: 999; /* Below the sidebar */
+  }
+  
+  .profile-container .mobile-sidebar-close {
+    z-index: 1002; /* Above everything in sidebar */
+  }
+  
+  /* Add explicit pointer-events to ensure clicks work */
+  .profile-container button,
+  .profile-container .member-item {
+    pointer-events: auto !important;
+  }
+  
+  /* Add a small delay to the closing animation */
+  .profile-container.visible {
+    transition: transform 0.4s ease;
+  }
+}
+/* Chat-specific Mobile Sidebar Buttons */
+@media (max-width: 768px) {
+  /* Full-screen profile sidebar for chat */
+  .chat-container .profile-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none;
+    background-color: #282c34;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    border-radius: 0;
+    padding-top: 60px; /* Space for the close button */
+  }
+  
+  /* When sidebar is visible */
+  .chat-container .profile-container.visible {
+    transform: translateX(0);
+  }
+  
+  /* New class name for chat sidebar open button */
+  .chat-mobile-toggle-open {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  }
+  
+  /* New class name for chat sidebar close button */
+  .chat-mobile-toggle-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .chat-mobile-toggle-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* New class name for chat mobile overlay */
+  .chat-mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .chat-mobile-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* When sidebar is visible, darken and scale main content */
+  .chat-container .main-content.dimmed {
+    opacity: 0.4;
+    transform: scale(0.95);
+    pointer-events: none;
+    filter: blur(3px);
+  }
+  
+  /* Hide desktop buttons in mobile view */
+  @media (min-width: 769px) {
+    .chat-mobile-toggle-open,
+    .chat-mobile-toggle-close,
+    .chat-mobile-overlay {
+      display: none !important;
+    }
+  }
+  
+  /* Fix for sidebar navigation in chat */
+  .chat-container .profile-container button,
+  .chat-container .profile-container .member-item {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 100;
+  }
+  
+  /* Fix positioning for mobile chat sidebar elements */
+  .chat-mobile-overlay {
+    z-index: 999; /* Below the sidebar */
+  }
+  
+  .chat-container .profile-container .chat-mobile-toggle-close {
+    z-index: 1002; /* Above everything in sidebar */
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .chat-mobile-toggle-close {
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+  }
+  
+  .chat-mobile-toggle-open {
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+  }
+}
+/* Fix sidebar buttons visibility for desktop vs mobile views */
+
+/* Hide mobile toggle buttons in desktop view */
+@media (min-width: 769px) {
+  /* Hide close button in desktop view */
+  .chat-mobile-toggle-close {
+    display: none !important;
+  }
+  
+  /* Hide mobile open button in desktop view */
+  .chat-mobile-toggle-open {
+    display: none !important;
+  }
+  
+  /* Hide mobile overlay in desktop view */
+  .chat-mobile-overlay {
+    display: none !important;
+  }
+}
+
+/* Ensure proper positioning and visibility for mobile view */
+@media (max-width: 768px) {
+  /* Position close button in top right corner */
+  .chat-mobile-toggle-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex !important;
+    z-index: 1002;
+  }
+  
+  /* Show mobile open button only when needed */
+  .chat-mobile-toggle-open {
+    display: flex !important;
+  }
+  
+  /* Hide regular sidebar toggle in mobile view */
+
+  
+  /* Full-width profile container for mobile */
+  .profile-container {
+    width: 100vw !important;
+    height: 100vh !important;
+    padding-top: 60px; /* Space for the close button */
+  }
+}

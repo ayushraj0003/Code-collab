@@ -464,7 +464,8 @@ const RoomPage = () => {
         {/* Upload Slider */}
         <div className={`upload-slider ${isUploadSliderOpen ? "open" : ""}`}>
           <div className="upload-slider-header">
-            <h2>📤 File & Folder Upload</h2>
+            {/* <h2>📤 File & Folder Upload</h2> */}
+            <h2>Folder Upload</h2>
             <button
               className="upload-slider-close"
               onClick={() => setIsUploadSliderOpen(false)}

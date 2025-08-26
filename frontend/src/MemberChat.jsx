@@ -41,8 +41,11 @@ function MemberChat({ roomId, onlineUsers, onUserClick, activeUserId }) {
     fetchRoomDetails();
   }, [roomId]);
 
-  const handleUserClick = (userId) => {
-    if (userId !== currentUser._id) {  // Prevent clicking on self
+  const handleUserClick = (userId, e) => {
+    if (e) e.stopPropagation(); // Stop event from bubbling up
+
+    if (userId !== currentUser._id) {
+      // Prevent clicking on self
       setActiveMenuUserId(userId); // Set the active user ID
       onUserClick(userId);
     }
@@ -55,7 +58,7 @@ function MemberChat({ roomId, onlineUsers, onUserClick, activeUserId }) {
           <li
             key={user._id}
             className={`member-item ${activeUserId === user._id ? 'active' : ''}`} // Apply 'active' class if user is selected
-            onClick={() => handleUserClick(user._id)}
+            onClick={(e) => handleUserClick(user._id, e)}
           >
             {user.avatar && (
               <img

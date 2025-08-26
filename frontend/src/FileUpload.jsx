@@ -115,7 +115,8 @@ function FileUpload({ roomId }) {
   return (
     <div className="file-upload-container">
       <div className="upload-header">
-        <h2 className="upload-title">📁 File & Folder Upload</h2>
+        {/* <h2 className="upload-title">📁 File & Folder Upload</h2> */}
+        <h2>Folder Upload</h2>
         <p className="upload-subtitle">
           Upload your files and folders to the workspace
         </p>
@@ -203,7 +204,7 @@ function FileUpload({ roomId }) {
         </div>
 
         {/* Single File Upload Section */}
-        <div className="upload-section">
+        {/* <div className="upload-section">
           <div className="section-header">
             <p className="section-title">
               <span className="section-icon">📄</span>
@@ -271,7 +272,7 @@ function FileUpload({ roomId }) {
               </>
             )}
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

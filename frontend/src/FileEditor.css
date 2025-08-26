@@ -816,3 +816,92 @@
 .dropdown-content::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #5a6fd8, #6b46a3);
 }
+
+/* hide toggle & show inline header on desktop */
+.header-toggle,
+.header-modal-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* 1) Hide the inline header */
+  .file-editor-header {
+    display: none !important;
+  }
+
+  /* 2) Show the small-screen toggle */
+  .header-toggle {
+    display: block !important;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1500;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 1.2rem;
+  }
+
+  /* 3) Modal backdrop */
+  .header-modal-overlay {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1400;
+  }
+
+  /* 4) Modal content box */
+  .header-modal-content {
+    background: #fff;
+    width: 90vw;
+    max-width: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    position: relative;
+    padding: 1rem;
+  }
+
+  /* 5) Close button inside modal */
+  .header-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    font-size: 1.3rem;
+    color: #333;
+  }
+
+  /* show modal header (override) */
+  .header-modal-content .file-editor-header {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Make the header in the modal column-wise */
+  .header-modal-content .file-editor-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem;
+    border-radius: 2rem;
+  }
+  /* Stretch each section full-width */
+  .header-modal-content .file-editor-header .file-info,
+  .header-modal-content .file-editor-header .editor-controls {
+    width: 100% !important;
+  }
+  /* Wrap controls and space them out */
+  .header-modal-content .file-editor-header .editor-controls {
+    justify-content: space-between !important;
+    flex-wrap: wrap;
+  }
+}
